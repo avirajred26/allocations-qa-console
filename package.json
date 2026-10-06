@@ -1,0 +1,17 @@
+{
+  "name": "allocations-qa-console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pre-auth demonstration harness + QA console backend for dashboard.allocations.com",
+  "scripts": {
+    "test": "playwright test",
+    "test:desktop": "playwright test --project=desktop-chromium",
+    "test:mobile": "playwright test --project=mobile-iphone",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.7.0",
+    "typescript": "^5.6.0"
+  }
+}

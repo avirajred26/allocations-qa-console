@@ -1,0 +1,215 @@
+{
+  "_meta": {
+    "kind": "fixture",
+    "label": "Fixture \u00b7 every row below is seeded data, including the pre-auth rows (which mirror the harness shape but are NOT imported results)",
+    "generated_at": "2026-10-07T09:00:00Z",
+    "note": "All entries are fixture data. source=\"fixture-harness\" rows mirror the five real pre-auth checks so the console can demonstrate history for them; they are not live results. source=\"mock\" rows represent authenticated product flows that cannot run without Allocations-issued credentials. Live workflow runs are shown at workflow level on the Runs page; per-scenario live results appear only once a results.json import is implemented."
+  },
+  "scenarios": [
+    {
+      "id": "SM-001",
+      "name": "Sign-in surface renders",
+      "flow": "pre-auth",
+      "auth_required": false,
+      "source": "fixture-harness",
+      "blocker": true,
+      "history": [
+        {
+          "run_ref": "fixt-0001",
+          "status": "pass",
+          "duration_ms": 4120,
+          "env": "prod-public",
+          "device": "desktop-chromium",
+          "at": "2026-10-06T14:02:00Z"
+        },
+        {
+          "run_ref": "fixt-0002",
+          "status": "pass",
+          "duration_ms": 3980,
+          "env": "prod-public",
+          "device": "mobile-iphone",
+          "at": "2026-10-06T14:02:00Z"
+        }
+      ]
+    },
+    {
+      "id": "SM-002",
+      "name": "Sign-in form rejects empty and malformed input client-side",
+      "flow": "pre-auth",
+      "auth_required": false,
+      "source": "fixture-harness",
+      "blocker": true,
+      "history": [
+        {
+          "run_ref": "fixt-0001",
+          "status": "pass",
+          "duration_ms": 6210,
+          "env": "prod-public",
+          "device": "desktop-chromium",
+          "at": "2026-10-06T14:02:00Z"
+        }
+      ]
+    },
+    {
+      "id": "SM-003",
+      "name": "Password-reset entry point reachable",
+      "flow": "pre-auth",
+      "auth_required": false,
+      "source": "fixture-harness",
+      "blocker": false,
+      "history": [
+        {
+          "run_ref": "fixt-0001",
+          "status": "skipped",
+          "duration_ms": 0,
+          "env": "prod-public",
+          "device": "desktop-chromium",
+          "at": "2026-10-06T14:02:00Z",
+          "reason": "no reset link exposed on this surface"
+        }
+      ]
+    },
+    {
+      "id": "SM-004",
+      "name": "Public links resolve",
+      "flow": "pre-auth",
+      "auth_required": false,
+      "source": "fixture-harness",
+      "blocker": false,
+      "history": [
+        {
+          "run_ref": "fixt-0001",
+          "status": "pass",
+          "duration_ms": 8850,
+          "env": "prod-public",
+          "device": "desktop-chromium",
+          "at": "2026-10-06T14:02:00Z"
+        }
+      ]
+    },
+    {
+      "id": "SM-005",
+      "name": "Mobile sign-in layout has no overflow; controls tappable",
+      "flow": "pre-auth",
+      "auth_required": false,
+      "source": "fixture-harness",
+      "blocker": true,
+      "history": [
+        {
+          "run_ref": "fixt-0002",
+          "status": "pass",
+          "duration_ms": 5020,
+          "env": "prod-public",
+          "device": "mobile-iphone",
+          "at": "2026-10-06T14:02:00Z"
+        }
+      ]
+    },
+    {
+      "id": "SPV-010",
+      "name": "Create SPV: entity name, jurisdiction, management fee saved",
+      "flow": "spv-formation",
+      "auth_required": true,
+      "source": "mock",
+      "blocker": true,
+      "history": [
+        {
+          "run_ref": "mock",
+          "status": "pass",
+          "duration_ms": 41000,
+          "env": "staging",
+          "device": "desktop-chromium",
+          "at": "2026-10-05T11:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "INV-020",
+      "name": "Invite investor: email sent, invite link opens onboarding",
+      "flow": "investor-onboarding",
+      "auth_required": true,
+      "source": "mock",
+      "blocker": true,
+      "history": [
+        {
+          "run_ref": "mock",
+          "status": "fail",
+          "duration_ms": 22000,
+          "env": "staging",
+          "device": "desktop-chromium",
+          "at": "2026-10-05T11:00:00Z",
+          "triage": {
+            "class": "product-defect",
+            "owner": "backend",
+            "priority": "P1",
+            "ticket": "LIN-412",
+            "quarantined": false,
+            "note": "Invite email template missing fund name; blocks investor onboarding."
+          }
+        }
+      ]
+    },
+    {
+      "id": "KYC-030",
+      "name": "KYC: accredited-investor questionnaire validates and persists",
+      "flow": "investor-onboarding",
+      "auth_required": true,
+      "source": "mock",
+      "blocker": true,
+      "history": [
+        {
+          "run_ref": "mock",
+          "status": "pass",
+          "duration_ms": 37000,
+          "env": "staging",
+          "device": "mobile-iphone",
+          "at": "2026-10-05T11:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "CAP-040",
+      "name": "Capital call: notice generated, amounts match commitments",
+      "flow": "capital-calls",
+      "auth_required": true,
+      "source": "mock",
+      "blocker": true,
+      "history": [
+        {
+          "run_ref": "mock",
+          "status": "flaky",
+          "duration_ms": 58000,
+          "env": "staging",
+          "device": "desktop-chromium",
+          "at": "2026-10-05T11:00:00Z",
+          "triage": {
+            "class": "automation-defect",
+            "owner": "qa",
+            "priority": "P2",
+            "ticket": "LIN-418",
+            "quarantined": true,
+            "note": "Assertion relies on wall-clock date; freeze time in test."
+          }
+        }
+      ]
+    },
+    {
+      "id": "DIS-050",
+      "name": "Distribution: pro-rata split equals ledger totals",
+      "flow": "distributions",
+      "auth_required": true,
+      "source": "mock",
+      "blocker": false,
+      "history": [
+        {
+          "run_ref": "mock",
+          "status": "pass",
+          "duration_ms": 29000,
+          "env": "staging",
+          "device": "desktop-chromium",
+          "at": "2026-10-05T11:00:00Z"
+        }
+      ]
+    }
+  ]
+}
