@@ -12,6 +12,8 @@ import {
   type SessionRun,
   type SessionRunState,
   type Suite,
+  type Workflow,
+  type Scope,
 } from '@/lib/run-types';
 
 const STORAGE_KEY = 'allocations-qa:session-runs:v1';
@@ -23,7 +25,7 @@ const CONCLUSIONS = ['success', 'failure', 'cancelled', 'skipped', 'timed_out', 
 interface RunsContextValue {
   runs: SessionRun[];
   hydrated: boolean;
-  addRun: (input: { run_ref: string; suite: Suite; dispatch: Dispatch }) => void;
+  addRun: (input: { run_ref: string; suite: Suite; dispatch: Dispatch; workflow?: Workflow; scope?: Scope }) => void;
   recheck: (ref: string) => void;
 }
 
@@ -42,6 +44,8 @@ function sanitizeStored(value: unknown): SessionRun[] {
       {
         run_ref: x.run_ref,
         suite: x.suite as Suite,
+        workflow: x.workflow === 'qa-run.yml' || x.workflow === 'qa-regression.yml' ? x.workflow : undefined,
+        scope: x.scope === 'full' || x.scope === 'api' || x.scope === 'ui' ? x.scope : undefined,
         dispatch: x.dispatch,
         startedAt: x.startedAt,
         found: x.found === true,
@@ -264,10 +268,12 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   }, [runs, hydrated]);
 
   const addRun = useCallback(
-    ({ run_ref, suite, dispatch }: { run_ref: string; suite: Suite; dispatch: Dispatch }) => {
+    ({ run_ref, suite, dispatch, workflow, scope }: { run_ref: string; suite: Suite; dispatch: Dispatch; workflow?: Workflow; scope?: Scope }) => {
       const run: SessionRun = {
         run_ref,
         suite,
+        workflow,
+        scope,
         dispatch,
         startedAt: Date.now(),
         found: false,

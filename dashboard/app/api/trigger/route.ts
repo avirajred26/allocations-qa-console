@@ -1,12 +1,13 @@
 import { NextResponse, after } from 'next/server';
-import { verifyDemoKey, requestId } from '@/lib/auth';
+import { verifyDemoKey, requestId, issueSession, verifySession, readCookie, sessionCookieHeader, SESSION_COOKIE, SESSION_TTL_SECONDS } from '@/lib/auth';
 import { acquireTriggerSlot, releaseTriggerSlot, cancelAdmission, keysFor, cooldownSeconds, DAILY_LIMIT } from '@/lib/redis';
-import { dispatchRun, newRunRef, type Suite } from '@/lib/github';
+import { dispatchRun, newRunRef, DISPATCHABLE, type DispatchWorkflow, type Scope, type Suite } from '@/lib/github';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const SUITES: Suite[] = ['all', 'desktop', 'mobile', 'drill'];
+const SCOPES: Scope[] = ['full', 'api', 'ui'];
 
 // Fixed client-facing messages. Nothing from GitHub or Redis is echoed.
 const E = {
@@ -25,12 +26,15 @@ function namespaceFrom(req: Request): string | undefined {
 
 /**
  * POST /api/trigger
- * body: { demoKey: string, suite?: 'all'|'desktop'|'mobile'|'drill' }
+ * body: { demoKey?: string, remember?: boolean, workflow?: 'qa-run.yml'|'qa-regression.yml',
+ *         suite?: 'all'|'desktop'|'mobile'|'drill', scope?: 'full'|'api'|'ui' }
+ * Auth: a submitted demoKey is always checked (a wrong key is 401 even with a remembered
+ * session); with no key, a valid qa_demo_session cookie is accepted.
  *
  * Order: validate key → atomic cooldown+daily cap → dispatch →
  *   rejected  → owner-checked rollback on the original keys
  *   uncertain → keep the quota consumed; return 202 so the poller resolves it
- * Only the fixed workflow/repo/branch from env is ever dispatched.
+ * Only an allowlisted workflow on the fixed repo/branch from env is ever dispatched.
  */
 export async function POST(req: Request) {
   const rid = requestId();
@@ -39,9 +43,14 @@ export async function POST(req: Request) {
   try { body = await req.json(); } catch { return NextResponse.json(E.badRequest, { status: 400 }); }
 
   const suite: Suite = SUITES.includes(body?.suite) ? body.suite : 'all';
+  const workflow: DispatchWorkflow = DISPATCHABLE.includes(body?.workflow) ? body.workflow : 'qa-run.yml';
+  const scope: Scope = SCOPES.includes(body?.scope) ? body.scope : 'full';
 
   // 1. Auth first so a bad key cannot consume a cooldown slot.
-  if (!verifyDemoKey(body?.demoKey)) {
+  const keyGiven = body?.demoKey !== undefined && body?.demoKey !== '';
+  const viaKey = keyGiven && verifyDemoKey(body.demoKey);
+  const viaSession = !keyGiven && verifySession(readCookie(req, SESSION_COOKIE)) !== null;
+  if (!viaKey && !viaSession) {
     console.info(`[trigger ${rid}] auth=failed`);
     return NextResponse.json(E.unauthorized, { status: 401 });
   }
@@ -74,7 +83,7 @@ export async function POST(req: Request) {
 
   // 4. Dispatch. Refund only on a definitive rejection.
   const runRef = newRunRef();
-  const outcome = await dispatchRun(runRef, suite);
+  const outcome = await dispatchRun(runRef, suite, { workflow, scope });
 
   if (outcome === 'rejected') {
     console.error(`[trigger ${rid}] dispatch=rejected ref=${runRef}`);
@@ -82,11 +91,15 @@ export async function POST(req: Request) {
     return NextResponse.json(E.failed, { status: 502 });
   }
 
-  console.info(`[trigger ${rid}] auth=ok dispatch=${outcome} ref=${runRef} suite=${suite} used=${slot.admission.count}`);
-  return NextResponse.json(
+  console.info(`[trigger ${rid}] auth=${viaKey ? 'key' : 'session'} dispatch=${outcome} ref=${runRef} workflow=${workflow} suite=${suite} scope=${scope} used=${slot.admission.count}`);
+  const session = viaKey && body?.remember !== false ? issueSession() : null;
+  const res = NextResponse.json(
     {
       run_ref: runRef,
+      workflow,
       suite,
+      scope,
+      remembered: session ? session.expiresAt : null,
       dispatch: outcome, // 'accepted' | 'uncertain' — UI shows "confirming…" for uncertain until the poller finds it
       cooldownSeconds: cooldownSeconds(),
       quotaUsed: slot.admission.count,
@@ -95,4 +108,6 @@ export async function POST(req: Request) {
     },
     { status: 202 },
   );
+  if (session) res.headers.set('Set-Cookie', sessionCookieHeader(req, session.value, SESSION_TTL_SECONDS));
+  return res;
 }

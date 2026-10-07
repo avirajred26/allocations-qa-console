@@ -1,4 +1,6 @@
 export type Suite = 'all' | 'desktop' | 'mobile' | 'drill';
+export type Workflow = 'qa-run.yml' | 'qa-regression.yml';
+export type Scope = 'full' | 'api' | 'ui';
 export type Dispatch = 'accepted' | 'uncertain';
 export type RunConclusion = 'success' | 'failure' | 'cancelled' | 'skipped' | 'timed_out' | 'neutral' | null;
 
@@ -9,6 +11,8 @@ export type SessionRunState = 'confirming' | 'queued' | 'in_progress' | 'complet
 export interface SessionRun {
   run_ref: string;
   suite: Suite;
+  workflow?: Workflow;
+  scope?: Scope;
   dispatch: Dispatch;
   startedAt: number;
   found: boolean;

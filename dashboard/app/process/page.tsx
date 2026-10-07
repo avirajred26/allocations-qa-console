@@ -8,9 +8,9 @@ export const metadata = { title: 'QA/QC process · Allocations QA Console' };
 const TRIGGERS = [
   { icon: GitPullRequestIcon, name: 'Pre-merge gate', when: 'Every PR to main: opened, pushed, reopened, ready for review', scope: 'API checks (anonymous API boundary, security headers)', devices: 'Desktop + iPhone', runs: '1× · 1 retry', gate: 'Blocks merge (required check)', file: 'qa-pr.yml' },
   { icon: GitMergeIcon, name: 'Post-merge verification', when: 'Every push to main, attributed to the merged PR', scope: 'UI + API: the full pre-auth suite', devices: 'Desktop + iPhone', runs: '1× · 1 retry', gate: 'Red main: fix forward or revert', file: 'qa-pr.yml' },
-  { icon: CalendarClockIcon, name: 'Weekly regression', when: 'Mondays 03:00 UTC, or on demand', scope: 'Entire suite: every spec, old and new', devices: 'Desktop + iPhone', runs: '3× repeats · 1 retry', gate: 'Opens triage for any failure', file: 'qa-regression.yml' },
+  { icon: CalendarClockIcon, name: 'Weekly regression', when: 'Mondays 03:00 UTC, or Trigger run → qa-regression.yml', scope: 'Entire suite: every spec, old and new', devices: 'Desktop + iPhone', runs: '3× repeats · 1 retry', gate: 'Opens triage for any failure', file: 'qa-regression.yml' },
   { icon: GaugeIcon, name: 'Health check', when: 'Every 6 hours', scope: 'Full pre-auth suite', devices: 'Desktop + iPhone', runs: '1× · 1 retry', gate: 'Signal only', file: 'qa-run.yml' },
-  { icon: HandIcon, name: 'Manual run', when: 'Trigger run in this console (demo key, 30 s cooldown, 20/day)', scope: 'All, desktop or mobile', devices: 'As chosen', runs: '1× · 1 retry', gate: 'On demand', file: 'qa-run.yml' },
+  { icon: HandIcon, name: 'Manual run', when: 'Trigger run → qa-run.yml (demo key once per 8 h, 30 s cooldown, 20/day)', scope: 'All, desktop or mobile × UI + API, API only or UI only', devices: 'As chosen', runs: '1× · 1 retry', gate: 'On demand', file: 'qa-run.yml' },
   { icon: SirenIcon, name: 'Failure drill', when: 'Trigger run → Failure drill', scope: 'Two deliberate, read-only failures (1 UI, 1 API)', devices: 'Desktop', runs: '1× · 1 retry', gate: 'Proves the failure path; always red', file: 'tests/drill' },
 ];
 
@@ -178,7 +178,7 @@ export default function ProcessPage() {
 
       <Section id="safety" icon={ShieldCheckIcon} title="Safety boundaries" intro="The harness runs against production, so it is built to be harmless there.">
         <ul className="grid gap-3 text-xs leading-5 text-muted-foreground md:grid-cols-2">
-          {['Public, pre-auth surface only; no credentials, no OTP requests, no accounts created', 'Fail-closed request guard: every non-GET request is aborted except the app’s own startup /api/auth/refresh', 'Service workers blocked so the guard sees every request', 'The console’s trigger needs a demo key (stored as a hash), has a 30 s cooldown and a 20-run daily cap', 'The failure drill is read-only: one page load and one anonymous GET', 'Live target checks are cached for 60 s: at most one probe a minute from the console'].map((i) => <li key={i} className="flex gap-2 rounded-md border bg-background/50 p-3"><ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0 text-success" aria-hidden />{i}</li>)}
+          {['Public, pre-auth surface only; no credentials, no OTP requests, no accounts created', 'Fail-closed request guard: every non-GET request is aborted except the app’s own startup /api/auth/refresh', 'Service workers blocked so the guard sees every request', 'The console’s trigger needs a demo key (only its hash is stored; a signed HttpOnly cookie remembers a browser for 8 h), dispatches only allowlisted workflows, and has a 30 s cooldown and a 20-run daily cap', 'The failure drill is read-only: one page load and one anonymous GET', 'Live target checks are cached for 60 s: at most one probe a minute from the console'].map((i) => <li key={i} className="flex gap-2 rounded-md border bg-background/50 p-3"><ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0 text-success" aria-hidden />{i}</li>)}
         </ul>
       </Section>
 

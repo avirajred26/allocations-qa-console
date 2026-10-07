@@ -95,8 +95,9 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+      # Skipped when the run was cancelled (superseded by a newer push), so it never posts a misleading report.
       - name: Notify (PR comment, summary, Slack, Teams)
-        if: always()
+        if: ${{ !cancelled() }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -110,7 +111,7 @@ jobs:
         run: node scripts/qa-notify.mjs
 
       - name: Upload summary
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: qa-summary-${{ env.QA_PHASE }}-${{ github.run_id }}

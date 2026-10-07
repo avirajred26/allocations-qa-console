@@ -2,9 +2,9 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useSWRConfig } from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import { toast } from 'sonner';
-import { AlertCircleIcon, PlayIcon } from 'lucide-react';
+import { AlertCircleIcon, KeyRoundIcon, PlayIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +22,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useRuns } from '@/components/providers/runs-provider';
 import { QUOTA_KEY, type QuotaData, type TriggerBlock } from '@/hooks/use-quota';
-import { RUN_REF_PATTERN, type Suite } from '@/lib/run-types';
+import { RUN_REF_PATTERN, type Scope, type Suite, type Workflow } from '@/lib/run-types';
 
 const SUITE_OPTIONS: { value: Suite; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -30,6 +30,24 @@ const SUITE_OPTIONS: { value: Suite; label: string }[] = [
   { value: 'mobile', label: 'Mobile' },
   { value: 'drill', label: 'Failure drill' },
 ];
+
+const WORKFLOW_OPTIONS: { value: Workflow; label: string; hint: string }[] = [
+  { value: 'qa-run.yml', label: 'qa-run.yml', hint: 'Manual run: pick the suite and scope below.' },
+  { value: 'qa-regression.yml', label: 'qa-regression.yml', hint: 'Entire suite, every spec old and new, desktop + iPhone, each check 3×. Takes a few minutes.' },
+];
+
+const SCOPE_OPTIONS: { value: Scope; label: string }[] = [
+  { value: 'full', label: 'UI + API' },
+  { value: 'api', label: 'API only' },
+  { value: 'ui', label: 'UI only' },
+];
+
+type Session = { active: boolean; expiresAt: number | null };
+const SESSION_KEY = '/api/session';
+const getSession = async (url: string): Promise<Session> => {
+  const res = await fetch(url, { cache: 'no-store' });
+  return res.ok ? res.json() : { active: false, expiresAt: null };
+};
 
 const FALLBACK: Record<number, string> = {
   400: 'Invalid request.',
@@ -56,7 +74,13 @@ export function TriggerDialog({
 }) {
   const { addRun } = useRuns();
   const { mutate } = useSWRConfig();
+  const [workflow, setWorkflow] = useState<Workflow>('qa-run.yml');
   const [suite, setSuite] = useState<Suite>('all');
+  const [scope, setScope] = useState<Scope>('full');
+  const [remember, setRemember] = useState(true);
+  // HttpOnly session cookie set by /api/trigger after one valid key; the key itself is never stored.
+  const { data: session } = useSWR<Session>(open ? SESSION_KEY : null, getSession, { revalidateOnFocus: false });
+  const remembered = !!session?.active;
   // The demo key lives only in this component's memory and is cleared on submit and on close.
   const [demoKey, setDemoKey] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +96,7 @@ export function TriggerDialog({
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (submitting || block || !demoKey) return;
+    if (submitting || block || (!demoKey && !remembered)) return;
     const key = demoKey;
     setDemoKey('');
     setError(null);
@@ -82,7 +106,7 @@ export function TriggerDialog({
       const res = await fetch('/api/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ demoKey: key, suite }),
+        body: JSON.stringify({ demoKey: key || undefined, remember, workflow, suite: workflow === 'qa-run.yml' ? suite : 'all', scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' }),
         cache: 'no-store',
       });
       const body: unknown = await res.json().catch(() => null);
@@ -96,14 +120,16 @@ export function TriggerDialog({
           void mutate(QUOTA_KEY);
           return;
         }
-        addRun({ run_ref: runRef, suite, dispatch });
+        addRun({ run_ref: runRef, suite: workflow === 'qa-run.yml' ? suite : 'all', dispatch, workflow, scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' });
         void mutate(QUOTA_KEY);
+        void mutate(SESSION_KEY);
         handleOpenChange(false);
         return;
       }
 
-      const message = serverMessage(res.status, body);
+      const message = res.status === 401 && !key ? 'The remembered session has expired. Enter the demo key again.' : serverMessage(res.status, body);
       setError(message);
+      if (res.status === 401) void mutate(SESSION_KEY);
 
       if (res.status === 429) {
         const retryAfter = (body as { retryAfter?: unknown } | null)?.retryAfter;
@@ -128,6 +154,11 @@ export function TriggerDialog({
 
   const blocked = block !== null;
 
+  async function forget() {
+    await fetch(SESSION_KEY, { method: 'DELETE', cache: 'no-store' }).catch(() => undefined);
+    void mutate(SESSION_KEY, { active: false, expiresAt: null }, { revalidate: false });
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -135,55 +166,109 @@ export function TriggerDialog({
           <DialogHeader>
             <DialogTitle>Trigger a harness run</DialogTitle>
             <DialogDescription>
-              Dispatches the fixed GitHub Actions workflow against the public pre-auth surface. Each attempt that
+              Dispatches an allowlisted GitHub Actions workflow against the public pre-auth surface. Each attempt that
               reaches GitHub consumes daily quota, even if confirmation is uncertain.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-lg border bg-muted/30 p-3 text-xs"><div className="flex justify-between gap-3"><span className="text-muted-foreground">Target</span><span>dashboard.allocations.com</span></div><div className="mt-2 flex justify-between gap-3"><span className="text-muted-foreground">Workflow</span><span className="font-mono">qa-run.yml · main</span></div></div>
+          <div className="rounded-lg border bg-muted/30 p-3 text-xs"><div className="flex justify-between gap-3"><span className="text-muted-foreground">Target</span><span>dashboard.allocations.com</span></div><div className="mt-2 flex justify-between gap-3"><span className="text-muted-foreground">Workflow</span><span className="font-mono">{workflow} · main</span></div></div>
           <FieldGroup>
             <FieldSet>
-              <FieldLegend variant="label">Suite</FieldLegend>
+              <FieldLegend variant="label">Workflow</FieldLegend>
               <ToggleGroup
                 variant="outline"
-                value={[suite]}
+                value={[workflow]}
                 onValueChange={(v: string[]) => {
-                  const next = v[0] as Suite | undefined;
-                  if (next) setSuite(next);
+                  const next = v[0] as Workflow | undefined;
+                  if (next) setWorkflow(next);
                 }}
-                aria-label="Suite"
+                aria-label="Workflow"
               >
-                {SUITE_OPTIONS.map((o) => (
-                  <ToggleGroupItem key={o.value} value={o.value} disabled={submitting}>
+                {WORKFLOW_OPTIONS.map((o) => (
+                  <ToggleGroupItem key={o.value} value={o.value} disabled={submitting} className="font-mono text-xs">
                     {o.label}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              {suite === 'drill' && (
-                <p className="text-[11px] leading-5 text-warning">
-                  Runs two deliberate, read-only failures (one UI, one API) on desktop to demonstrate the failure report:
-                  cause, screenshot, recording, trace and log. Expected result: failed.
-                </p>
-              )}
+              <FieldDescription>{WORKFLOW_OPTIONS.find((o) => o.value === workflow)?.hint} PR runs (qa-pr.yml) start from pull requests, not from here.</FieldDescription>
             </FieldSet>
 
-            <Field data-invalid={error === 'Demo key rejected.' || undefined}>
-              <FieldLabel htmlFor="demo-key">Demo key</FieldLabel>
-              <Input
-                id="demo-key"
-                type="password"
-                autoComplete="off"
-                spellCheck={false}
-                data-1p-ignore
-                data-lpignore="true"
-                value={demoKey}
-                onChange={(e) => setDemoKey(e.target.value)}
-                disabled={submitting || blocked}
-                aria-invalid={error === 'Demo key rejected.' || undefined}
-                required
-              />
-              <FieldDescription>Held in memory only. Cleared when you submit or close this dialog.</FieldDescription>
-            </Field>
+            {workflow === 'qa-run.yml' && (
+              <FieldSet>
+                <FieldLegend variant="label">Suite</FieldLegend>
+                <ToggleGroup
+                  variant="outline"
+                  value={[suite]}
+                  onValueChange={(v: string[]) => {
+                    const next = v[0] as Suite | undefined;
+                    if (next) setSuite(next);
+                  }}
+                  aria-label="Suite"
+                >
+                  {SUITE_OPTIONS.map((o) => (
+                    <ToggleGroupItem key={o.value} value={o.value} disabled={submitting}>
+                      {o.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+                {suite === 'drill' && (
+                  <p className="text-[11px] leading-5 text-warning">
+                    Runs two deliberate, read-only failures (one UI, one API) on desktop to demonstrate the failure report:
+                    cause, screenshot, recording, trace and log. Expected result: failed.
+                  </p>
+                )}
+              </FieldSet>
+            )}
+
+            {workflow === 'qa-run.yml' && suite !== 'drill' && (
+              <FieldSet>
+                <FieldLegend variant="label">Scope</FieldLegend>
+                <ToggleGroup
+                  variant="outline"
+                  value={[scope]}
+                  onValueChange={(v: string[]) => {
+                    const next = v[0] as Scope | undefined;
+                    if (next) setScope(next);
+                  }}
+                  aria-label="Scope"
+                >
+                  {SCOPE_OPTIONS.map((o) => (
+                    <ToggleGroupItem key={o.value} value={o.value} disabled={submitting}>
+                      {o.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </FieldSet>
+            )}
+
+            {remembered ? (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-success/25 bg-success/5 px-3 py-2.5 text-xs">
+                <span className="flex items-center gap-2"><KeyRoundIcon className="size-3.5 text-success" aria-hidden />Demo key remembered on this browser until {new Date(session!.expiresAt!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <button type="button" onClick={forget} className="text-primary underline-offset-2 hover:underline">Forget</button>
+              </div>
+            ) : (
+              <Field data-invalid={error === 'Demo key rejected.' || undefined}>
+                <FieldLabel htmlFor="demo-key">Demo key</FieldLabel>
+                <Input
+                  id="demo-key"
+                  type="password"
+                  autoComplete="off"
+                  spellCheck={false}
+                  data-1p-ignore
+                  data-lpignore="true"
+                  value={demoKey}
+                  onChange={(e) => setDemoKey(e.target.value)}
+                  disabled={submitting || blocked}
+                  aria-invalid={error === 'Demo key rejected.' || undefined}
+                  required
+                />
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-3.5 accent-[var(--primary)]" />
+                  Remember this browser for 8 hours
+                </label>
+                <FieldDescription>The key is held in memory and cleared on submit. Remembering sets a signed, HttpOnly cookie; the key itself is never stored.</FieldDescription>
+              </Field>
+            )}
           </FieldGroup>
 
           {error && (
@@ -204,7 +289,7 @@ export function TriggerDialog({
 
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="ghost" />}>Cancel</DialogClose>
-            <Button type="submit" disabled={submitting || blocked || demoKey.length === 0}>
+            <Button type="submit" disabled={submitting || blocked || (demoKey.length === 0 && !remembered)}>
               {submitting ? <Spinner data-icon="inline-start" /> : <PlayIcon data-icon="inline-start" />}
               {submitting ? 'Starting…' : 'Start'}
             </Button>

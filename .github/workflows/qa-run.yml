@@ -24,6 +24,12 @@ on:
         default: all
         type: choice
         options: [all, desktop, mobile, drill]
+      scope:
+        description: Test scope (full = UI + API, api = request-level only, ui = browser only)
+        required: false
+        default: full
+        type: choice
+        options: [full, api, ui]
 
 # One run at a time per ref; never cancel a run a reviewer may be watching.
 concurrency:
@@ -44,6 +50,7 @@ jobs:
       RUN_REF: ${{ inputs.run_ref || format('sched-{0}', github.run_id) }}
       TARGET: ${{ inputs.target || 'prod-public' }}
       SUITE: ${{ inputs.suite || 'all' }}
+      QA_SCOPE: ${{ inputs.scope || 'full' }}
     steps:
       - name: Validate run_ref shape
         run: |
@@ -87,8 +94,9 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+      # Skipped when the run was cancelled, so a superseded run never posts a misleading report.
       - name: Report (job summary, Slack/Teams if configured)
-        if: always()
+        if: ${{ !cancelled() }}
         env:
           QA_PHASE: ${{ github.event_name == 'schedule' && 'health' || (env.SUITE == 'drill' && 'drill' || 'manual') }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -99,7 +107,7 @@ jobs:
 
       # Tiny artifact the console reads for run history and the run report page.
       - name: Upload summary
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: qa-summary-${{ env.RUN_REF }}
