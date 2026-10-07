@@ -1,0 +1,121 @@
+name: QA gate
+# Runs the pre-auth suite twice per change:
+#   pre-merge  — on every PR open / push, so the check can block the merge
+#   post-merge — on every push to main, attributed back to the merged PR
+# Each run posts one report (PR comment, job summary, Slack, Teams) with totals, durations,
+# failure causes and links to screenshots, recordings, traces and logs.
+run-name: "QA ${{ github.event_name == 'pull_request' && format('pre-merge PR #{0}', github.event.pull_request.number) || format('post-merge {0}', github.sha) }}"
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+
+concurrency:
+  group: qa-gate-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write   # sticky QA comment on the PR
+  actions: read
+
+jobs:
+  qa:
+    name: QA ${{ github.event_name == 'pull_request' && 'pre-merge' || 'post-merge' }}
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_URL: https://dashboard.allocations.com
+      CI: "true"
+      QA_PHASE: ${{ github.event_name == 'pull_request' && 'pre-merge' || 'post-merge' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Reporter unit tests
+        run: npm run test:unit
+
+      - name: Resolve PR context
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR_NUMBER_EV: ${{ github.event.pull_request.number }}
+          PR_TITLE_EV: ${{ github.event.pull_request.title }}
+          PR_AUTHOR_EV: ${{ github.event.pull_request.user.login }}
+          PR_URL_EV: ${{ github.event.pull_request.html_url }}
+          PR_SHA_EV: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            { echo "number=$PR_NUMBER_EV"; echo "author=$PR_AUTHOR_EV"; echo "url=$PR_URL_EV"; echo "sha=$PR_SHA_EV"; } >> "$GITHUB_OUTPUT"
+            { echo "title<<EOF"; echo "$PR_TITLE_EV"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+          else
+            # Post-merge: find the PR this commit came from (empty for direct pushes).
+            pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '[.[] | select(.merged_at != null)][0] // empty')
+            echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+            if [ -n "$pr" ]; then
+              echo "number=$(jq -r .number <<<"$pr")" >> "$GITHUB_OUTPUT"
+              echo "author=$(jq -r .user.login <<<"$pr")" >> "$GITHUB_OUTPUT"
+              echo "url=$(jq -r .html_url <<<"$pr")" >> "$GITHUB_OUTPUT"
+              { echo "title<<EOF"; jq -r .title <<<"$pr"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+            else
+              echo "author=$GITHUB_ACTOR" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run Playwright
+        id: pw
+        continue-on-error: true
+        run: npx playwright test
+
+      # Uploaded before notifying so every evidence link in the messages already resolves.
+      - name: Upload report, screenshots, recordings and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ env.QA_PHASE }}-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Notify (PR comment, summary, Slack, Teams)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          CONSOLE_URL: ${{ vars.QA_CONSOLE_URL }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_TITLE: ${{ steps.pr.outputs.title }}
+          PR_AUTHOR: ${{ steps.pr.outputs.author }}
+          PR_URL: ${{ steps.pr.outputs.url }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+        run: node scripts/qa-notify.mjs
+
+      - name: Keep the machine-readable report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-notify-${{ env.QA_PHASE }}-${{ github.run_id }}
+          path: qa-notify-report.json
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: Fail the check when tests failed
+        if: steps.pw.outcome == 'failure'
+        run: exit 1
