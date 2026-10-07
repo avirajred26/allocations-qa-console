@@ -59,7 +59,15 @@ Run only one server on port 3000. Stop the dev server before starting the produc
 
 ## PR quality gate (pre-merge and post-merge)
 
-`.github/workflows/qa-pr.yml` runs the pre-auth suite on every PR to `main` (open, push, reopen, ready for review) and again after every merge to `main`. The pre-merge check fails when a test fails, so branch protection can block the merge.
+| Trigger | Workflow | Scope (`QA_SCOPE`) |
+|---|---|---|
+| Pre-merge: every PR to `main` (open, push, reopen, ready for review) | `qa-pr.yml` | **API** — anonymous API boundary + security headers; fails the check so branch protection can block the merge |
+| Post-merge: every push to `main`, attributed to the merged PR | `qa-pr.yml` | **UI + API** — the full pre-auth suite |
+| Weekly regression: Mondays 03:00 UTC or on demand | `qa-regression.yml` | **Entire suite**, every spec old and new, each check repeated 3× |
+| Health check: every 6 h | `qa-run.yml` | Full suite |
+| Manual: console *Trigger run* | `qa-run.yml` | All / desktop / mobile, or **Failure drill** (`tests/drill`: two deliberate, read-only failures — one UI, one API — that prove the failure report) |
+
+API specs are recognised by filename (`*api*`, `*header*`, `*boundary*`, `*contract*`), so new specs join the right gate automatically. The full process — gates, triage, severity, roles — is documented in the console at `/process`. Every run's report is also a console page at `/runs/gh/<run id>` with inline screenshots and recordings.
 
 Each run posts **one report** to the PR (a sticky comment per phase), the job summary, and — when the secrets are set — Slack and Microsoft Teams:
 

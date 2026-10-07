@@ -41,7 +41,8 @@ async function gh(path: string, init: RequestInit = {}, timeoutMs = 8000): Promi
   }
 }
 
-export type Suite = 'all' | 'desktop' | 'mobile';
+/** 'drill' runs only tests/drill: deliberate, read-only failures that prove the failure-reporting path. */
+export type Suite = 'all' | 'desktop' | 'mobile' | 'drill';
 
 export type DispatchOutcome = 'accepted' | 'rejected' | 'uncertain';
 
@@ -132,6 +133,8 @@ export async function findRun(runRef: string): Promise<RunStatus> {
 
 export type WorkflowRun = {
   id: number;
+  path: string;
+  head_branch: string;
   display_title: string;
   event: string;
   status: 'queued' | 'in_progress' | 'completed' | string;
@@ -141,12 +144,24 @@ export type WorkflowRun = {
   updated_at: string;
 };
 
-/** Every run of the fixed workflow on the fixed branch, newest first (dispatch and schedule alike). */
+/** Every QA workflow in this repo: manual/health runs, the PR gate and the weekly regression. */
+export const QA_WORKFLOWS = [`.github/workflows/${WORKFLOW}`, '.github/workflows/qa-pr.yml', '.github/workflows/qa-regression.yml'];
+
+/** Runs of the QA workflows, newest first (dispatch, schedule, pull_request and push alike). */
 export async function listRuns(perPage = 30): Promise<WorkflowRun[]> {
-  const res = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?branch=${BRANCH}&per_page=${perPage}`);
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/runs?per_page=${Math.min(100, perPage * 2)}`);
   if (!res.ok) throw new Error(`gh-list-${res.status}`);
   const data = (await res.json()) as { workflow_runs: WorkflowRun[] };
-  return data.workflow_runs;
+  return data.workflow_runs.filter((r) => QA_WORKFLOWS.includes(r.path)).slice(0, perPage);
+}
+
+/** One QA run by id; null when it is not a run of a QA workflow in this repo. */
+export async function getRun(runId: number): Promise<WorkflowRun | null> {
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/runs/${runId}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`gh-run-${res.status}`);
+  const run = (await res.json()) as WorkflowRun;
+  return QA_WORKFLOWS.includes(run.path) ? run : null;
 }
 
 /**

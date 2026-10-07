@@ -1,23 +1,12 @@
 import { Redis } from '@upstash/redis';
-import { downloadArtifact, listRuns, type WorkflowRun } from '@/lib/github';
+import { downloadArtifact, getRun, listRuns, type WorkflowRun } from '@/lib/github';
 import { extractZipEntry } from '@/lib/zip';
 
-export type CheckStats = { passed: number; failed: number; flaky: number; skipped: number };
+import type { CheckStats, HistoryRun, Phase, QaSummary } from '@/lib/qa-types';
+export { PHASE_LABEL } from '@/lib/qa-types';
+export type { CheckStats, HistoryRun, Phase, QaSummary, ReportFailure } from '@/lib/qa-types';
 
-export type HistoryRun = {
-  id: number;
-  ref: string;
-  event: string;
-  status: string;
-  conclusion: WorkflowRun['conclusion'];
-  url: string;
-  startedAt: string;
-  durationSec: number | null;
-  /** Totals from the run's own results.json; null when the artifact is gone or the run is not finished. */
-  stats: CheckStats | null;
-};
-
-const CACHE_PREFIX = 'ci:stats:v1:';
+const CACHE_PREFIX = 'ci:summary:v2:';
 const MISSING_TTL_SECONDS = 6 * 3600;
 /** Artifact downloads per request; the rest are filled in by later requests. */
 const MAX_DOWNLOADS = 3;
@@ -31,15 +20,25 @@ export function parseStats(json: unknown): CheckStats | null {
   return Object.values(out).every(Number.isFinite) ? out : null;
 }
 
-async function fetchStats(runId: number): Promise<CheckStats | null> {
+/** Which gate a run belongs to, from its workflow file and event (the summary's own phase wins when present). */
+export function phaseOf(run: Pick<WorkflowRun, 'path' | 'event'>): Phase {
+  if (run.path.endsWith('qa-pr.yml')) return run.event === 'pull_request' ? 'pre-merge' : 'post-merge';
+  if (run.path.endsWith('qa-regression.yml')) return 'regression';
+  return run.event === 'schedule' ? 'health' : 'manual';
+}
+
+/** The run's qa-summary.json, or for runs that predate it, a results.json read out of the full report. */
+export async function fetchSummary(runId: number): Promise<QaSummary | null> {
   const art = await downloadArtifact(runId, ['qa-summary-', 'playwright-report-']);
   if (!art) return null;
   const entry = art.name.startsWith('qa-summary-')
     ? extractZipEntry(art.zip, 'qa-summary.json')
     : extractZipEntry(art.zip, 'test-results/results.json');
   if (!entry) return null;
-  try { return parseStats(JSON.parse(entry.toString('utf8'))); } catch { return null; }
+  try { return JSON.parse(entry.toString('utf8')) as QaSummary; } catch { return null; }
 }
+
+type Cached = { stats: CheckStats | null; phase: Phase | null; causes: Record<string, number> | null } | 'missing';
 
 function redisOrNull(): Redis | null {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
@@ -50,44 +49,71 @@ export async function loadHistory(limit = 30): Promise<HistoryRun[]> {
   const runs = await listRuns(limit);
   const redis = redisOrNull();
   const finished = runs.filter((r) => r.status === 'completed');
-  const cached = new Map<number, CheckStats | 'missing'>();
+  const cached = new Map<number, Cached>();
   if (redis && finished.length) {
-    const values = await redis.mget<(CheckStats | 'missing' | null)[]>(...finished.map((r) => CACHE_PREFIX + r.id)).catch(() => []);
+    const values = await redis.mget<(Cached | null)[]>(...finished.map((r) => CACHE_PREFIX + r.id)).catch(() => []);
     finished.forEach((r, i) => { const v = values[i]; if (v) cached.set(r.id, v); });
   }
   let downloads = 0;
   const out: HistoryRun[] = [];
   for (const r of runs) {
-    let stats: CheckStats | null = null;
-    if (r.status === 'completed') {
-      const hit = cached.get(r.id);
-      if (hit) stats = hit === 'missing' ? null : hit;
-      else if (downloads < MAX_DOWNLOADS) {
-        downloads++;
-        let failed = false;
-        stats = await fetchStats(r.id).catch(() => { failed = true; return null; });
-        // A transient GitHub error is retried on the next request; only a definite miss is cached.
-        if (redis && !failed) {
-          await (stats
-            ? redis.set(CACHE_PREFIX + r.id, stats)
-            : redis.set(CACHE_PREFIX + r.id, 'missing', { ex: MISSING_TTL_SECONDS })
-          ).catch(() => undefined);
-        }
+    let entry: Cached | undefined = cached.get(r.id);
+    if (r.status === 'completed' && !entry && downloads < MAX_DOWNLOADS) {
+      downloads++;
+      let failed = false;
+      const summary = await fetchSummary(r.id).catch(() => { failed = true; return null; });
+      entry = summary ? { stats: parseStats(summary), phase: summary.phase ?? null, causes: summary.report?.byCategory ?? null } : 'missing';
+      // A transient GitHub error is retried on the next request; only a definite result is cached.
+      if (redis && !failed) {
+        await (entry === 'missing'
+          ? redis.set(CACHE_PREFIX + r.id, 'missing', { ex: MISSING_TTL_SECONDS })
+          : redis.set(CACHE_PREFIX + r.id, entry)
+        ).catch(() => undefined);
       }
     }
+    const hit = entry && entry !== 'missing' ? entry : null;
     const start = Date.parse(r.run_started_at);
     const end = Date.parse(r.updated_at);
     out.push({
       id: r.id,
       ref: r.display_title.replace(/^QA run\s*/, '') || String(r.id),
       event: r.event,
+      phase: hit?.phase ?? phaseOf(r),
       status: r.status,
       conclusion: r.conclusion,
       url: r.html_url,
+      branch: r.head_branch,
       startedAt: r.run_started_at,
       durationSec: r.status === 'completed' && end > start ? Math.round((end - start) / 1000) : null,
-      stats,
+      stats: hit?.stats ?? null,
+      causes: hit?.causes ?? null,
     });
   }
   return out;
 }
+
+/** Everything the run report page shows for one run. */
+export async function loadRunReport(runId: number) {
+  const run = await getRun(runId);
+  if (!run) return null;
+  const summary = run.status === 'completed' ? await fetchSummary(runId) : null;
+  const start = Date.parse(run.run_started_at);
+  const end = Date.parse(run.updated_at);
+  return {
+    id: run.id,
+    title: run.display_title,
+    phase: summary?.phase ?? phaseOf(run),
+    scope: summary?.scope ?? null,
+    event: run.event,
+    status: run.status,
+    conclusion: run.conclusion,
+    url: run.html_url,
+    branch: run.head_branch,
+    startedAt: run.run_started_at,
+    durationSec: run.status === 'completed' && end > start ? Math.round((end - start) / 1000) : null,
+    stats: summary ? parseStats(summary) : null,
+    ctx: summary?.ctx ?? null,
+    report: summary?.report ?? null,
+  };
+}
+export type RunReport = NonNullable<Awaited<ReturnType<typeof loadRunReport>>>;

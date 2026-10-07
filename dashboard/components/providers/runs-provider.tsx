@@ -16,7 +16,7 @@ import {
 
 const STORAGE_KEY = 'allocations-qa:session-runs:v1';
 const FIRST_POLL_DELAY_MS = 5_000;
-const SUITES: Suite[] = ['all', 'desktop', 'mobile'];
+const SUITES: Suite[] = ['all', 'desktop', 'mobile', 'drill'];
 const STATES: SessionRunState[] = ['confirming', 'queued', 'in_progress', 'completed', 'unresolved'];
 const CONCLUSIONS = ['success', 'failure', 'cancelled', 'skipped', 'timed_out', 'neutral'] as const;
 

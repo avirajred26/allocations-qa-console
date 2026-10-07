@@ -1,7 +1,7 @@
 name: QA gate
 # Runs the pre-auth suite twice per change:
-#   pre-merge  — on every PR open / push, so the check can block the merge
-#   post-merge — on every push to main, attributed back to the merged PR
+#   pre-merge  — API checks on every PR open / push, so the check can block the merge
+#   post-merge — UI + API on every push to main, attributed back to the merged PR
 # Each run posts one report (PR comment, job summary, Slack, Teams) with totals, durations,
 # failure causes and links to screenshots, recordings, traces and logs.
 run-name: "QA ${{ github.event_name == 'pull_request' && format('pre-merge PR #{0}', github.event.pull_request.number) || format('post-merge {0}', github.sha) }}"
@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   qa:
-    name: QA ${{ github.event_name == 'pull_request' && 'pre-merge' || 'post-merge' }}
+    name: QA ${{ github.event_name == 'pull_request' && 'pre-merge (API)' || 'post-merge (UI + API)' }}
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -32,6 +32,8 @@ jobs:
       BASE_URL: https://dashboard.allocations.com
       CI: "true"
       QA_PHASE: ${{ github.event_name == 'pull_request' && 'pre-merge' || 'post-merge' }}
+      # Pre-merge gates on the fast request-level (API) checks; post-merge runs UI + API.
+      QA_SCOPE: ${{ github.event_name == 'pull_request' && 'api' || 'full' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -107,12 +109,12 @@ jobs:
           HEAD_SHA: ${{ steps.pr.outputs.sha }}
         run: node scripts/qa-notify.mjs
 
-      - name: Keep the machine-readable report
+      - name: Upload summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qa-notify-${{ env.QA_PHASE }}-${{ github.run_id }}
-          path: qa-notify-report.json
+          name: qa-summary-${{ env.QA_PHASE }}-${{ github.run_id }}
+          path: qa-summary.json
           retention-days: 90
           if-no-files-found: ignore
 

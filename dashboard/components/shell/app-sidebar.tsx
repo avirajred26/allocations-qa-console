@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ActivityIcon, ArrowUpRightIcon, ChevronDownIcon, CircleCheckIcon, FlaskConicalIcon, LayersIcon, ShieldCheckIcon } from 'lucide-react';
+import { ActivityIcon, ArrowUpRightIcon, ChevronDownIcon, CircleCheckIcon, ClipboardCheckIcon, FlaskConicalIcon, LayersIcon, ShieldCheckIcon } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { REPO_URL, scenarios } from '@/lib/fixture';
 import { useTriage } from '@/components/providers/triage-provider';
@@ -13,7 +13,7 @@ export function AppSidebar(){
   const groups=[
     {label:'Monitor',items:[{href:'/',label:'Release readiness',icon:CircleCheckIcon,count:readiness.blockerFailures.length},{href:'/runs',label:'Runs',icon:ActivityIcon,count:runs.filter(r=>r.status!=='completed'&&r.status!=='unresolved').length}]},
     {label:'Test assets',items:[{href:'/history',label:'Scenario library',icon:LayersIcon,count:scenarios.length}]},
-    {label:'Engineering',items:[{href:'/harness',label:'Harness & coverage',icon:FlaskConicalIcon,count:null}]},
+    {label:'Engineering',items:[{href:'/process',label:'QA/QC process',icon:ClipboardCheckIcon,count:null},{href:'/harness',label:'Harness & coverage',icon:FlaskConicalIcon,count:null}]},
   ];
   return <Sidebar collapsible="offcanvas">
     <SidebarHeader className="h-16 justify-center border-b px-5"><div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm"><ShieldCheckIcon className="size-5"/></span><div><p className="text-sm font-semibold tracking-tight">Allocations <span className="font-normal text-muted-foreground">QA</span></p><p className="mt-0.5 font-mono text-[10px] text-muted-foreground">RELEASE WORKSPACE</p></div></div></SidebarHeader>

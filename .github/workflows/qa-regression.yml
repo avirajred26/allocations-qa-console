@@ -1,0 +1,78 @@
+name: QA weekly regression
+# The whole suite — every spec, old and new, UI and API — on desktop Chromium and iPhone 13,
+# each check repeated 3x so intermittent failures surface instead of hiding behind one green run.
+run-name: "QA weekly regression ${{ github.event_name == 'workflow_dispatch' && '(manual)' || '' }}"
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"   # Mondays 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: qa-regression
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  regression:
+    name: Regression (full suite x3, desktop + iPhone)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_URL: https://dashboard.allocations.com
+      CI: "true"
+      QA_PHASE: regression
+      QA_SCOPE: full
+      RUN_REF: regression-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run Playwright (every check 3x)
+        id: pw
+        continue-on-error: true
+        run: npx playwright test --repeat-each=3
+
+      - name: Upload report, screenshots, recordings and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ env.RUN_REF }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Report (job summary, Slack/Teams if configured)
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          CONSOLE_URL: ${{ vars.QA_CONSOLE_URL }}
+        run: node scripts/qa-notify.mjs
+
+      - name: Upload summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-summary-${{ env.RUN_REF }}
+          path: qa-summary.json
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: Fail when any repeat failed
+        if: steps.pw.outcome == 'failure'
+        run: exit 1

@@ -8,8 +8,22 @@ import { defineConfig, devices } from '@playwright/test';
  * Authenticated product flows (SPV formation, KYC, capital calls) are
  * represented in the console as mocked scenarios until credentials are provided.
  */
+/**
+ * Test scope per trigger (QA_SCOPE):
+ *   api  — request-level specs only (pre-merge gate: fast, no browser rendering needed)
+ *   ui   — browser specs only
+ *   full — everything (default; post-merge, weekly regression, manual runs)
+ * API specs are recognised by filename, the same rule the reporter uses for the BACKEND cause.
+ * tests/drill holds deliberate, read-only failures and runs only when QA_DRILL=1.
+ */
+const API_SPEC = /(api|header|boundary|contract)[^/]*\.spec\.ts$/;
+const SCOPE = process.env.QA_SCOPE ?? 'full';
+const DRILL = process.env.QA_DRILL === '1';
+
 export default defineConfig({
   testDir: './tests',
+  testMatch: DRILL ? /drill\/.*\.spec\.ts$/ : SCOPE === 'api' ? API_SPEC : /.*\.spec\.ts$/,
+  testIgnore: DRILL ? [] : SCOPE === 'ui' ? [/\/drill\//, API_SPEC] : [/\/drill\//],
   timeout: 30_000,
   expect: { timeout: 8_000 },
   fullyParallel: true,

@@ -6,7 +6,7 @@ import { dispatchRun, newRunRef, type Suite } from '@/lib/github';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const SUITES: Suite[] = ['all', 'desktop', 'mobile'];
+const SUITES: Suite[] = ['all', 'desktop', 'mobile', 'drill'];
 
 // Fixed client-facing messages. Nothing from GitHub or Redis is echoed.
 const E = {
@@ -25,7 +25,7 @@ function namespaceFrom(req: Request): string | undefined {
 
 /**
  * POST /api/trigger
- * body: { demoKey: string, suite?: 'all'|'desktop'|'mobile' }
+ * body: { demoKey: string, suite?: 'all'|'desktop'|'mobile'|'drill' }
  *
  * Order: validate key → atomic cooldown+daily cap → dispatch →
  *   rejected  → owner-checked rollback on the original keys
