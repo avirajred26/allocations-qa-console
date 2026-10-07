@@ -2,7 +2,7 @@
 
 Independent Lead QA assignment for dashboard.allocations.com. Not an official Allocations product. This package combines the original Playwright harness and GitHub workflow with the completed v0-derived dashboard, including the latest local redesign (7 October 2026).
 
-**Not deployed. Live dispatch is not configured.** No credentials are included.
+**Live console: https://aviraj-allocations-qa.vercel.app** — Live trigger configured; demo key issued to reviewers out-of-band. No credentials are included in this repo.
 
 ## Harness status (7 October 2026)
 
