@@ -44,13 +44,13 @@ function RecoveryTile(){
 }
 
 function TriggerTile(){
-  const {data,error}=useQuota();const cooldown=useCooldownSeconds(data);
-  const live=!!data&&!error;
+  const {data,error,isLoading}=useQuota();const cooldown=useCooldownSeconds(data);
+  const live=!!data&&!error;const checking=isLoading&&!data;
   return <section className="flex flex-col gap-3 p-5">
     <Eyebrow label="Runs today" kind="live"/>
     {live?<p className="font-mono text-[30px] leading-none tracking-tight">{data.used}<span className="text-base text-muted-foreground">/{data.limit}</span></p>:<p className="font-mono text-[30px] leading-none tracking-tight text-muted-foreground">—</p>}
     <div className="h-2 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full bg-primary transition-all" style={{width:live?`${Math.min(100,data.used/data.limit*100)}%`:'0%'}}/></div>
-    <p className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground"><RadioIcon className={cn('size-3',live?'text-success':'text-warning')} aria-hidden/>{!live?'Trigger offline':cooldown>0?`cooldown ${cooldown}s`:'ready · 30s cooldown · 20/day'}</p>
+    <p className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground"><RadioIcon className={cn('size-3',live?'text-success':checking?'text-muted-foreground':'text-warning')} aria-hidden/>{checking?'checking…':!live?'Trigger offline':cooldown>0?`cooldown ${cooldown}s`:'ready · 30s cooldown · 20/day'}</p>
   </section>;
 }
 
