@@ -1,10 +1,11 @@
 import { Redis } from '@upstash/redis';
-import { downloadArtifact, getRun, listRuns, type WorkflowRun } from '@/lib/github';
+import { downloadArtifact, getJobLogTail, getJobs, getRun, listRuns, type WorkflowRun } from '@/lib/github';
+import { buildReport } from '@/lib/qa-report-core.mjs';
 import { extractZipEntry } from '@/lib/zip';
 
 import type { CheckStats, HistoryRun, Phase, QaSummary } from '@/lib/qa-types';
 export { PHASE_LABEL } from '@/lib/qa-types';
-export type { CheckStats, HistoryRun, Phase, QaSummary, ReportFailure } from '@/lib/qa-types';
+export type { CheckStats, HistoryRun, Phase, QaSummary, ReportFailure, ReportTest } from '@/lib/qa-types';
 
 const CACHE_PREFIX = 'ci:summary:v2:';
 const MISSING_TTL_SECONDS = 6 * 3600;
@@ -35,7 +36,11 @@ export async function fetchSummary(runId: number): Promise<QaSummary | null> {
     ? extractZipEntry(art.zip, 'qa-summary.json')
     : extractZipEntry(art.zip, 'test-results/results.json');
   if (!entry) return null;
-  try { return JSON.parse(entry.toString('utf8')) as QaSummary; } catch { return null; }
+  try {
+    const json = JSON.parse(entry.toString('utf8'));
+    // Older runs only have Playwright's results.json: rebuild the same report the CI reporter writes.
+    return art.name.startsWith('qa-summary-') ? (json as QaSummary) : ({ stats: json.stats, report: buildReport(json) } as QaSummary);
+  } catch { return null; }
 }
 
 type Cached = { stats: CheckStats | null; phase: Phase | null; causes: Record<string, number> | null } | 'missing';
@@ -96,7 +101,13 @@ export async function loadHistory(limit = 30): Promise<HistoryRun[]> {
 export async function loadRunReport(runId: number) {
   const run = await getRun(runId);
   if (!run) return null;
-  const summary = run.status === 'completed' ? await fetchSummary(runId) : null;
+  const [summary, jobs] = await Promise.all([
+    run.status === 'completed' ? fetchSummary(runId).catch(() => null) : null,
+    getJobs(runId).catch(() => []),
+  ]);
+  // The Playwright step's own console output, so the console answers "what happened" without GitHub.
+  const job = jobs.find((j) => j.conclusion === 'failure') ?? jobs[0];
+  const logTail = job && run.status === 'completed' ? await getJobLogTail(job.id).catch(() => null) : null;
   const start = Date.parse(run.run_started_at);
   const end = Date.parse(run.updated_at);
   return {
@@ -114,6 +125,8 @@ export async function loadRunReport(runId: number) {
     stats: summary ? parseStats(summary) : null,
     ctx: summary?.ctx ?? null,
     report: summary?.report ?? null,
+    jobs,
+    log: job && logTail ? { job: job.name, step: job.steps.find((s) => /playwright/i.test(s.name) && s.name.startsWith('Run'))?.name ?? 'Run Playwright', lines: logTail } : null,
   };
 }
 export type RunReport = NonNullable<Awaited<ReturnType<typeof loadRunReport>>>;

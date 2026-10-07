@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -20,6 +22,19 @@ const API_SPEC = /(api|header|boundary|contract)[^/]*\.spec\.ts$/;
 const SCOPE = process.env.QA_SCOPE ?? 'full';
 const DRILL = process.env.QA_DRILL === '1';
 
+/**
+ * Target: BASE_URL wins (CI sets it from scripts/qa-env.mjs); otherwise QA_ENV picks an
+ * environment from dashboard/qa-environments.json; otherwise production.
+ */
+function targetUrl(): string {
+  if (process.env.BASE_URL) return process.env.BASE_URL;
+  const id = process.env.QA_ENV ?? 'prod';
+  const registry = JSON.parse(readFileSync(join(__dirname, 'dashboard', 'qa-environments.json'), 'utf8'));
+  const env = registry.environments.find((e: { id: string }) => e.id === id);
+  if (!env?.baseUrl) throw new Error(`QA_ENV=${id} has no baseUrl in dashboard/qa-environments.json`);
+  return env.baseUrl;
+}
+
 export default defineConfig({
   testDir: './tests',
   testMatch: DRILL ? /drill\/.*\.spec\.ts$/ : SCOPE === 'api' ? API_SPEC : /.*\.spec\.ts$/,
@@ -33,9 +48,11 @@ export default defineConfig({
     ['list'],
     ['html', { open: 'never', outputFolder: 'playwright-report' }],
     ['json', { outputFile: 'test-results/results.json' }],
+    // JUnit for CI systems with a native test tab (Azure DevOps, Jenkins, GitLab).
+    ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
   use: {
-    baseURL: process.env.BASE_URL ?? 'https://dashboard.allocations.com',
+    baseURL: targetUrl(),
     trace: 'retain-on-failure',
     // page.route() cannot see requests a service worker intercepts; block them for the harness.
     serviceWorkers: 'block',

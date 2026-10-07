@@ -13,11 +13,17 @@ on:
         required: true
         type: string
       target:
-        description: Target environment label (informational; harness only hits public prod surface)
+        description: Legacy label (informational)
         required: false
         default: prod-public
         type: choice
         options: [prod-public]
+      environment:
+        description: Environment from dashboard/qa-environments.json
+        required: false
+        default: prod
+        type: choice
+        options: [prod, staging, dev]
       suite:
         description: Which project(s) to run
         required: false
@@ -45,7 +51,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      BASE_URL: https://dashboard.allocations.com
       CI: "true"
       RUN_REF: ${{ inputs.run_ref || format('sched-{0}', github.run_id) }}
       TARGET: ${{ inputs.target || 'prod-public' }}
@@ -59,6 +64,11 @@ jobs:
           fi
 
       - uses: actions/checkout@v4
+
+      # Target from dashboard/qa-environments.json. Fails if the chosen environment has no URL.
+      - name: Resolve environment
+        run: node scripts/qa-env.mjs "${{ github.event_name == 'schedule' && 'health' || inputs.environment || 'prod' }}" >> "$GITHUB_ENV"
+
 
       - uses: actions/setup-node@v4
         with:

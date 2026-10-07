@@ -81,6 +81,12 @@ Causes are a rule-based triage hint from the error text and spec type (`scripts/
 
 Setup: add repository secrets `SLACK_WEBHOOK_URL` (Slack incoming webhook) and/or `TEAMS_WEBHOOK_URL` (Teams Workflows webhook), and fill Slack member IDs / Teams emails in `.github/qa-notify.json`. Without them the PR comment and job summary still work.
 
+## Environments and CI/CD
+
+`dashboard/qa-environments.json` lists dev, staging and prod and maps each trigger to one (pre-merge / post-merge → staging; regression, health, manual → prod). It is read by `playwright.config.ts` (`QA_ENV`), every pipeline (`scripts/qa-env.mjs`) and the console's *Trigger run* environment picker. Only production's URL is known for this assignment; dev and staging stay disabled until their URLs are added. A gate whose environment has no URL runs against the fallback and says so in the report; an explicitly chosen environment without a URL fails instead.
+
+The harness is CI-agnostic: `scripts/qa-ci.sh` (with `QA_PHASE`, optional `QA_ENV` / `QA_SCOPE`) resolves the environment, runs Playwright and writes JUnit, the HTML report, evidence, `qa-report.md` and `qa-summary.json`. GitHub Actions is live; `azure-pipelines.yml` provides the same PR / main / weekly / manual triggers for Azure DevOps (syntax-checked, not run here). GitLab or Jenkins call the same script; the reporter reads their run, PR and author variables.
+
 ## Evidence and limitations
 
 | Data | Provenance |

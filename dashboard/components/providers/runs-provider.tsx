@@ -25,7 +25,7 @@ const CONCLUSIONS = ['success', 'failure', 'cancelled', 'skipped', 'timed_out', 
 interface RunsContextValue {
   runs: SessionRun[];
   hydrated: boolean;
-  addRun: (input: { run_ref: string; suite: Suite; dispatch: Dispatch; workflow?: Workflow; scope?: Scope }) => void;
+  addRun: (input: { run_ref: string; suite: Suite; dispatch: Dispatch; workflow?: Workflow; scope?: Scope; environment?: string }) => void;
   recheck: (ref: string) => void;
 }
 
@@ -46,6 +46,7 @@ function sanitizeStored(value: unknown): SessionRun[] {
         suite: x.suite as Suite,
         workflow: x.workflow === 'qa-run.yml' || x.workflow === 'qa-regression.yml' ? x.workflow : undefined,
         scope: x.scope === 'full' || x.scope === 'api' || x.scope === 'ui' ? x.scope : undefined,
+        environment: typeof x.environment === 'string' && /^[a-z0-9-]{2,20}$/.test(x.environment) ? x.environment : undefined,
         dispatch: x.dispatch,
         startedAt: x.startedAt,
         found: x.found === true,
@@ -268,12 +269,13 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   }, [runs, hydrated]);
 
   const addRun = useCallback(
-    ({ run_ref, suite, dispatch, workflow, scope }: { run_ref: string; suite: Suite; dispatch: Dispatch; workflow?: Workflow; scope?: Scope }) => {
+    ({ run_ref, suite, dispatch, workflow, scope, environment }: { run_ref: string; suite: Suite; dispatch: Dispatch; workflow?: Workflow; scope?: Scope; environment?: string }) => {
       const run: SessionRun = {
         run_ref,
         suite,
         workflow,
         scope,
+        environment,
         dispatch,
         startedAt: Date.now(),
         found: false,

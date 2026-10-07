@@ -1,6 +1,7 @@
 import { NextResponse, after } from 'next/server';
 import { verifyDemoKey, requestId, issueSession, verifySession, readCookie, sessionCookieHeader, SESSION_COOKIE, SESSION_TTL_SECONDS } from '@/lib/auth';
 import { acquireTriggerSlot, releaseTriggerSlot, cancelAdmission, keysFor, cooldownSeconds, DAILY_LIMIT } from '@/lib/redis';
+import { isTargetable } from '@/lib/environments';
 import { dispatchRun, newRunRef, DISPATCHABLE, type DispatchWorkflow, type Scope, type Suite } from '@/lib/github';
 
 export const runtime = 'nodejs';
@@ -27,7 +28,7 @@ function namespaceFrom(req: Request): string | undefined {
 /**
  * POST /api/trigger
  * body: { demoKey?: string, remember?: boolean, workflow?: 'qa-run.yml'|'qa-regression.yml',
- *         suite?: 'all'|'desktop'|'mobile'|'drill', scope?: 'full'|'api'|'ui' }
+ *         suite?: 'all'|'desktop'|'mobile'|'drill', scope?: 'full'|'api'|'ui', environment?: string }
  * Auth: a submitted demoKey is always checked (a wrong key is 401 even with a remembered
  * session); with no key, a valid qa_demo_session cookie is accepted.
  *
@@ -45,6 +46,11 @@ export async function POST(req: Request) {
   const suite: Suite = SUITES.includes(body?.suite) ? body.suite : 'all';
   const workflow: DispatchWorkflow = DISPATCHABLE.includes(body?.workflow) ? body.workflow : 'qa-run.yml';
   const scope: Scope = SCOPES.includes(body?.scope) ? body.scope : 'full';
+  const environment = body?.environment ?? 'prod';
+  // Only environments with a URL in qa-environments.json; checked before auth so nothing is consumed.
+  if (!isTargetable(environment)) {
+    return NextResponse.json({ error: 'bad-request', message: `Environment "${String(environment).slice(0, 20)}" is not configured.` }, { status: 400 });
+  }
 
   // 1. Auth first so a bad key cannot consume a cooldown slot.
   const keyGiven = body?.demoKey !== undefined && body?.demoKey !== '';
@@ -83,7 +89,7 @@ export async function POST(req: Request) {
 
   // 4. Dispatch. Refund only on a definitive rejection.
   const runRef = newRunRef();
-  const outcome = await dispatchRun(runRef, suite, { workflow, scope });
+  const outcome = await dispatchRun(runRef, suite, { workflow, scope, environment });
 
   if (outcome === 'rejected') {
     console.error(`[trigger ${rid}] dispatch=rejected ref=${runRef}`);
@@ -91,12 +97,13 @@ export async function POST(req: Request) {
     return NextResponse.json(E.failed, { status: 502 });
   }
 
-  console.info(`[trigger ${rid}] auth=${viaKey ? 'key' : 'session'} dispatch=${outcome} ref=${runRef} workflow=${workflow} suite=${suite} scope=${scope} used=${slot.admission.count}`);
+  console.info(`[trigger ${rid}] auth=${viaKey ? 'key' : 'session'} dispatch=${outcome} ref=${runRef} workflow=${workflow} env=${environment} suite=${suite} scope=${scope} used=${slot.admission.count}`);
   const session = viaKey && body?.remember !== false ? issueSession() : null;
   const res = NextResponse.json(
     {
       run_ref: runRef,
       workflow,
+      environment,
       suite,
       scope,
       remembered: session ? session.expiresAt : null,

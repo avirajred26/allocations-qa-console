@@ -8,7 +8,7 @@
     "test:desktop": "playwright test --project=desktop-chromium",
     "test:mobile": "playwright test --project=mobile-iphone",
     "report": "playwright show-report",
-    "test:unit": "node --test scripts/qa-notify.test.mjs"
+    "test:unit": "node --test scripts/qa-notify.test.mjs scripts/qa-env.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

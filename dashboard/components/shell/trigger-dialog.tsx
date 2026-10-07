@@ -23,6 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useRuns } from '@/components/providers/runs-provider';
 import { QUOTA_KEY, type QuotaData, type TriggerBlock } from '@/hooks/use-quota';
 import { RUN_REF_PATTERN, type Scope, type Suite, type Workflow } from '@/lib/run-types';
+import { ENVIRONMENTS } from '@/lib/environments';
 
 const SUITE_OPTIONS: { value: Suite; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -74,7 +75,9 @@ export function TriggerDialog({
 }) {
   const { addRun } = useRuns();
   const { mutate } = useSWRConfig();
+  const [environment, setEnvironment] = useState('prod');
   const [workflow, setWorkflow] = useState<Workflow>('qa-run.yml');
+  const envInfo = ENVIRONMENTS.find((e) => e.id === environment);
   const [suite, setSuite] = useState<Suite>('all');
   const [scope, setScope] = useState<Scope>('full');
   const [remember, setRemember] = useState(true);
@@ -106,7 +109,7 @@ export function TriggerDialog({
       const res = await fetch('/api/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ demoKey: key || undefined, remember, workflow, suite: workflow === 'qa-run.yml' ? suite : 'all', scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' }),
+        body: JSON.stringify({ demoKey: key || undefined, remember, environment, workflow, suite: workflow === 'qa-run.yml' ? suite : 'all', scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' }),
         cache: 'no-store',
       });
       const body: unknown = await res.json().catch(() => null);
@@ -120,7 +123,7 @@ export function TriggerDialog({
           void mutate(QUOTA_KEY);
           return;
         }
-        addRun({ run_ref: runRef, suite: workflow === 'qa-run.yml' ? suite : 'all', dispatch, workflow, scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' });
+        addRun({ run_ref: runRef, suite: workflow === 'qa-run.yml' ? suite : 'all', dispatch, workflow, environment, scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' });
         void mutate(QUOTA_KEY);
         void mutate(SESSION_KEY);
         handleOpenChange(false);
@@ -171,8 +174,27 @@ export function TriggerDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-lg border bg-muted/30 p-3 text-xs"><div className="flex justify-between gap-3"><span className="text-muted-foreground">Target</span><span>dashboard.allocations.com</span></div><div className="mt-2 flex justify-between gap-3"><span className="text-muted-foreground">Workflow</span><span className="font-mono">{workflow} · main</span></div></div>
+          <div className="rounded-lg border bg-muted/30 p-3 text-xs"><div className="flex justify-between gap-3"><span className="text-muted-foreground">Target</span><span>{envInfo?.baseUrl?.replace(/^https?:\/\//, '') ?? '—'}</span></div><div className="mt-2 flex justify-between gap-3"><span className="text-muted-foreground">Workflow</span><span className="font-mono">{workflow} · main</span></div></div>
           <FieldGroup>
+            <FieldSet>
+              <FieldLegend variant="label">Environment</FieldLegend>
+              <ToggleGroup
+                variant="outline"
+                value={[environment]}
+                onValueChange={(v: string[]) => {
+                  if (v[0]) setEnvironment(v[0]);
+                }}
+                aria-label="Environment"
+              >
+                {ENVIRONMENTS.map((e) => (
+                  <ToggleGroupItem key={e.id} value={e.id} disabled={submitting || !e.baseUrl} title={e.baseUrl ?? e.notes}>
+                    {e.label}{!e.baseUrl && <span className="ml-1 text-[10px] text-muted-foreground">· no URL</span>}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+              <FieldDescription>From qa-environments.json. Add a dev or staging URL there to enable it; nothing silently falls back to production.</FieldDescription>
+            </FieldSet>
+
             <FieldSet>
               <FieldLegend variant="label">Workflow</FieldLegend>
               <ToggleGroup

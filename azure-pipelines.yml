@@ -1,0 +1,107 @@
+# Azure DevOps pipeline for the same QA harness and gates as the GitHub workflows.
+# Everything runs through scripts/qa-ci.sh, so Azure, GitHub, GitLab and Jenkins behave alike.
+#
+#   PR to main            -> pre-merge  (API checks, gate environment from qa-environments.json)
+#   push / merge to main  -> post-merge (UI + API)
+#   Mondays 03:00 UTC     -> regression (entire suite, each check 3x)
+#   Run pipeline (manual) -> choose phase, environment, scope
+#
+# Results appear in the run's Tests tab (JUnit), the "QA report" summary tab, and the
+# published artifacts (screenshots, recordings, traces, logs). Not yet run in an Azure org:
+# validated for syntax and against the same entrypoint the GitHub workflows' logic mirrors.
+# Optional: variable SLACK_WEBHOOK_URL / TEAMS_WEBHOOK_URL (secret) enables chat notifications.
+
+trigger:
+  branches:
+    include: [main]
+
+pr:
+  branches:
+    include: [main]
+
+schedules:
+  - cron: "0 3 * * 1"
+    displayName: Weekly regression
+    branches:
+      include: [main]
+    always: true
+
+parameters:
+  - name: phase
+    displayName: Phase (manual runs)
+    type: string
+    default: manual
+    values: [manual, pre-merge, post-merge, regression]
+  - name: environment
+    displayName: Environment (empty = the phase's gate)
+    type: string
+    default: prod
+    values: [prod, staging, dev]
+  - name: scope
+    displayName: Scope (manual runs)
+    type: string
+    default: full
+    values: [full, api, ui]
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - name: QA_PHASE
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: pre-merge
+    ${{ elseif eq(variables['Build.Reason'], 'Schedule') }}:
+      value: regression
+    ${{ elseif in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI') }}:
+      value: post-merge
+    ${{ else }}:
+      value: ${{ parameters.phase }}
+
+jobs:
+  - job: qa
+    displayName: QA $(QA_PHASE)
+    timeoutInMinutes: 30
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: "20.x"
+
+      - script: npm ci && npm run test:unit
+        displayName: Install and reporter unit tests
+
+      - script: npx playwright install --with-deps chromium webkit
+        displayName: Install Playwright browsers
+
+      - script: scripts/qa-ci.sh
+        displayName: Run QA ($(QA_PHASE))
+        env:
+          QA_PHASE: $(QA_PHASE)
+          ${{ if eq(variables['Build.Reason'], 'Manual') }}:
+            QA_ENV: ${{ parameters.environment }}
+            QA_SCOPE: ${{ parameters.scope }}
+          SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
+          TEAMS_WEBHOOK_URL: $(TEAMS_WEBHOOK_URL)
+
+      - task: PublishTestResults@2
+        displayName: Publish test results (Tests tab)
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: test-results/junit.xml
+          testRunTitle: QA $(QA_PHASE)
+          failTaskOnFailedTests: false
+
+      - task: PublishPipelineArtifact@1
+        displayName: Publish report, screenshots, recordings and traces
+        condition: succeededOrFailed()
+        inputs:
+          targetPath: $(System.DefaultWorkingDirectory)
+          artifact: playwright-report-$(QA_PHASE)-$(Build.BuildId)
+          publishLocation: pipeline   # .artifactignore narrows this to the evidence folders
+
+      - task: PublishPipelineArtifact@1
+        displayName: Publish QA summary
+        condition: succeededOrFailed()
+        inputs:
+          targetPath: qa-summary.json
+          artifact: qa-summary-$(QA_PHASE)-$(Build.BuildId)

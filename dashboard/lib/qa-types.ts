@@ -35,16 +35,22 @@ export type QaSummary = {
   phase?: Phase;
   scope?: string;
   stats?: Record<string, number>;
-  ctx?: { prNumber?: string | null; prTitle?: string; prUrl?: string | null; author?: string | null; sha?: string; target?: string };
+  ctx?: { env?: string | null; envLabel?: string | null; envNote?: string | null; prNumber?: string | null; prTitle?: string; prUrl?: string | null; author?: string | null; sha?: string; target?: string };
   report?: {
     stats: { total: number; passed: number; failed: number; flaky: number; skipped: number; durationMs: number };
     byCategory: Record<string, number>;
+    tests?: ReportTest[];
     failures: ReportFailure[];
     flaky: ReportFailure[];
     findings: string[];
     slowest: { title: string; project: string; durationMs: number }[];
     globalErrors: string[];
   };
+};
+export type ReportTest = {
+  title: string; file: string; line: number; project: string;
+  outcome: 'expected' | 'unexpected' | 'flaky' | 'skipped'; status: string; durationMs: number; retries: number;
+  annotations: { type: string; description: string }[];
 };
 export type ReportFailure = {
   title: string; file: string; line: number; project: string; retries: number; durationMs: number;
