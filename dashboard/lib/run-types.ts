@@ -1,4 +1,4 @@
-export type Suite = 'all' | 'desktop' | 'mobile';
+export type Suite = 'all' | 'desktop' | 'mobile' | 'drill';
 export type Dispatch = 'accepted' | 'uncertain';
 export type RunConclusion = 'success' | 'failure' | 'cancelled' | 'skipped' | 'timed_out' | 'neutral' | null;
 

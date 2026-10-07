@@ -23,7 +23,7 @@ on:
         required: false
         default: all
         type: choice
-        options: [all, desktop, mobile]
+        options: [all, desktop, mobile, drill]
 
 # One run at a time per ref; never cancel a run a reviewer may be watching.
 concurrency:
@@ -70,6 +70,8 @@ jobs:
           case "$SUITE" in
             desktop) PROJ="--project=desktop-chromium" ;;
             mobile)  PROJ="--project=mobile-iphone" ;;
+            # Deliberate, read-only failures that prove the failure-reporting path.
+            drill)   PROJ="--project=desktop-chromium"; export QA_DRILL=1 ;;
             *)       PROJ="" ;;
           esac
           npx playwright test $PROJ
@@ -85,17 +87,17 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
-      - name: Write machine-readable summary
+      - name: Report (job summary, Slack/Teams if configured)
         if: always()
-        run: |
-          if [ -f test-results/results.json ]; then
-            node -e '
-              const r=require("./test-results/results.json");
-              require("fs").writeFileSync("qa-summary.json", JSON.stringify({run_ref:process.env.RUN_REF, suite:process.env.SUITE, stats:r.stats}));
-            '
-          fi
+        env:
+          QA_PHASE: ${{ github.event_name == 'schedule' && 'health' || (env.SUITE == 'drill' && 'drill' || 'manual') }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          CONSOLE_URL: ${{ vars.QA_CONSOLE_URL }}
+          PR_AUTHOR: ${{ github.actor }}
+        run: node scripts/qa-notify.mjs
 
-      # Tiny artifact the console reads for run history, so it never has to download traces.
+      # Tiny artifact the console reads for run history and the run report page.
       - name: Upload summary
         if: always()
         uses: actions/upload-artifact@v4
@@ -104,28 +106,6 @@ jobs:
           path: qa-summary.json
           retention-days: 90
           if-no-files-found: ignore
-
-      - name: Write job summary
-        if: always()
-        run: |
-          echo "## QA run \`$RUN_REF\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Target | $TARGET |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Suite | $SUITE |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Playwright outcome | ${{ steps.pw.outcome }} |" >> "$GITHUB_STEP_SUMMARY"
-          if [ -f test-results/results.json ]; then
-            node -e '
-              const r=require("./test-results/results.json");
-              const s=r.stats||{};
-              console.log(`| Passed | ${s.expected??"?"} |`);
-              console.log(`| Failed | ${s.unexpected??"?"} |`);
-              console.log(`| Flaky | ${s.flaky??"?"} |`);
-              console.log(`| Skipped | ${s.skipped??"?"} |`);
-              console.log(`| Duration | ${Math.round((s.duration??0)/1000)}s |`);
-            ' >> "$GITHUB_STEP_SUMMARY"
-          fi
 
       - name: Propagate test outcome
         if: steps.pw.outcome == 'failure'

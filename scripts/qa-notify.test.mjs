@@ -30,6 +30,8 @@ test('classification rules: network first, request-level specs are backend, loca
   assert.equal(classifyFailure({ file: 'preauth/03-anon-api-boundary.spec.ts', message: 'expect(received).toBe(expected) Expected: 401 Received: 200' }), 'backend');
   assert.equal(classifyFailure({ file: 'preauth/04-security-headers.spec.ts', message: 'HSTS' }), 'backend');
   assert.equal(classifyFailure({ message: "expect(locator).toBeVisible() failed Locator: getByRole('button')" }), 'ui');
+  // Real message from the failure drill: a status assertion on an endpoint, outside a request-level spec file.
+  assert.equal(classifyFailure({ file: 'drill/failure-drill.spec.ts', message: 'Error: anonymous /api/auth/me status\n\nexpect(received).toBe(expected) // Object.is equality\n\nExpected: 200\nReceived: 401' }), 'backend');
   assert.equal(classifyFailure({ message: 'Test timeout of 30000ms exceeded.' }), 'timeout');
   assert.equal(classifyFailure({ message: 'expect(received).toEqual(expected)' }), 'test');
 });
@@ -66,5 +68,5 @@ test('Slack, Teams and Markdown messages carry PR, author, counts, causes and ev
   for (const s of ['AdaptiveCard', 'PR #12', '<at>Aviraj Lall</at>', 'aviraj@example.com', 'Failures by cause']) assert.ok(teams.includes(s), `teams missing ${s}`);
   const md = renderMarkdown(ctx, r, people);
   assert.ok(md.startsWith('<!-- qa-report:pre-merge -->'));
-  for (const s of ['❌ QA pre-merge failed · PR #12', '| 14 | 2 | 7 | 0 | 5 | 1m 34s |', '**BACKEND**', '**UI**', '[trace](', '@fe-lead']) assert.ok(md.includes(s), `markdown missing ${s}`);
+  for (const s of ['❌ QA · Pre-merge (API) failed · PR #12', '| 14 | 2 | 7 | 0 | 5 | 1m 34s |', '**BACKEND**', '**UI**', '[trace](', '@fe-lead']) assert.ok(md.includes(s), `markdown missing ${s}`);
 });

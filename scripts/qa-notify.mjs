@@ -32,6 +32,8 @@ export function classifyFailure({ file = '', message = '' }) {
   const m = clean(message);
   if (/net::ERR_|ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|socket hang up|NS_ERROR_|page\.goto: Timeout|navigation timeout/i.test(m)) return 'network';
   if (REQUEST_LEVEL_SPEC.test(file)) return 'backend';
+  // An HTTP status compared in an assertion about an endpoint or a status (e.g. Expected: 200, Received: 401).
+  if (/(\/api\/|\bstatus\b)[\s\S]{0,300}\b(Expected|Received):\s*[1-5]\d\d\b/i.test(m)) return 'backend';
   if (/status (code )?(of )?[45]\d\d\b|Failed to load resource|toBeOK|response\.(status|ok)|apiRequestContext|mutating request|\b5\d\d\b.*(error|status)/i.test(m)) return 'backend';
   if (/locator|getBy(Role|Text|Label|Placeholder|TestId)|toBe(Visible|Hidden|Enabled|Disabled|InViewport|Checked)|toHave(Text|Value|Count|Attribute|Screenshot|Class|CSS)|element is not|overflow|tap target/i.test(m)) return 'ui';
   if (/Test timeout of \d+ms exceeded|Timeout \d+ms exceeded/i.test(m)) return 'timeout';
@@ -126,9 +128,11 @@ export function links(ctx, f) {
 
 function headline(ctx, report) {
   const ok = report.stats.failed === 0 && !report.globalErrors.length;
-  const phase = { 'pre-merge': 'Pre-merge', 'post-merge': 'Post-merge', manual: 'Manual', scheduled: 'Scheduled' }[ctx.phase] ?? ctx.phase;
-  return { ok, phase, text: `${ok ? '✅' : '❌'} QA ${phase.toLowerCase()} ${ok ? 'passed' : 'failed'}${ctx.prNumber ? ` · PR #${ctx.prNumber}` : ''}` };
+  const phase = PHASE_LABEL[ctx.phase] ?? ctx.phase;
+  return { ok, phase, text: `${ok ? '✅' : '❌'} QA · ${phase} ${ok ? 'passed' : 'failed'}${ctx.prNumber ? ` · PR #${ctx.prNumber}` : ''}` };
 }
+
+export const PHASE_LABEL = { 'pre-merge': 'Pre-merge (API)', 'post-merge': 'Post-merge (UI + API)', regression: 'Weekly regression', manual: 'Manual', drill: 'Failure drill', health: 'Health check' };
 
 const MARKER = (phase) => `<!-- qa-report:${phase} -->`;
 
@@ -267,12 +271,16 @@ async function main() {
     target: env.BASE_URL ?? 'https://dashboard.allocations.com', consoleUrl: (env.CONSOLE_URL || config.consoleUrl || '').replace(/\/$/, ''), token: env.GITHUB_TOKEN,
   };
   const path = env.RESULTS_PATH ?? 'test-results/results.json';
-  const report = existsSync(path)
-    ? buildReport(JSON.parse(readFileSync(path, 'utf8')))
+  const raw = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
+  const report = raw
+    ? buildReport(raw)
     : { stats: { total: 0, passed: 0, failed: 0, flaky: 0, skipped: 0, durationMs: 0 }, failures: [], flaky: [], byCategory: {}, findings: [], slowest: [], globalErrors: ['Playwright produced no results.json (install or config failure) — see the job log.'] };
   const people = resolvePeople(config, ctx, report);
   const md = renderMarkdown(ctx, report, people);
-  writeFileSync('qa-notify-report.json', JSON.stringify({ ctx: { ...ctx, token: undefined }, report }, null, 2));
+  const publicCtx = { ...ctx, token: undefined };
+  writeFileSync('qa-notify-report.json', JSON.stringify({ ctx: publicCtx, report }, null, 2));
+  // Read by the console (run history + run report pages). `stats` keeps Playwright's own field names.
+  writeFileSync('qa-summary.json', JSON.stringify({ run_ref: env.RUN_REF ?? null, suite: env.SUITE ?? null, scope: ctx.phase === 'drill' ? 'drill' : env.QA_SCOPE ?? 'full', phase: ctx.phase, stats: raw?.stats ?? null, ctx: publicCtx, report }));
   if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `${md}\n`);
   const notifyOn = config.notify?.[ctx.phase] ?? 'always';
   const shouldNotify = notifyOn === 'always' || (notifyOn === 'failure' && !headline(ctx, report).ok);

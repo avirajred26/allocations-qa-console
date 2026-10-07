@@ -57,6 +57,30 @@ Run only one server on port 3000. Stop the dev server before starting the produc
 - Trigger dialog and real server-side dispatch/status/quota implementation. The dialog shows missing setup and prevents dispatch when quota is unavailable.
 - Original root Playwright harness, fail-closed sign-in checks and `.github/workflows/qa-run.yml`.
 
+## PR quality gate (pre-merge and post-merge)
+
+| Trigger | Workflow | Scope (`QA_SCOPE`) |
+|---|---|---|
+| Pre-merge: every PR to `main` (open, push, reopen, ready for review) | `qa-pr.yml` | **API** — anonymous API boundary + security headers; fails the check so branch protection can block the merge |
+| Post-merge: every push to `main`, attributed to the merged PR | `qa-pr.yml` | **UI + API** — the full pre-auth suite |
+| Weekly regression: Mondays 03:00 UTC or on demand | `qa-regression.yml` | **Entire suite**, every spec old and new, each check repeated 3× |
+| Health check: every 6 h | `qa-run.yml` | Full suite |
+| Manual: console *Trigger run* | `qa-run.yml` | All / desktop / mobile, or **Failure drill** (`tests/drill`: two deliberate, read-only failures — one UI, one API — that prove the failure report) |
+
+API specs are recognised by filename (`*api*`, `*header*`, `*boundary*`, `*contract*`), so new specs join the right gate automatically. The full process — gates, triage, severity, roles — is documented in the console at `/process`. Every run's report is also a console page at `/runs/gh/<run id>` with inline screenshots and recordings.
+
+Each run posts **one report** to the PR (a sticky comment per phase), the job summary, and — when the secrets are set — Slack and Microsoft Teams:
+
+- PR number, title and link; author (@mentioned); commit; target; phase
+- total / passed / failed / flaky / skipped and duration; slowest checks
+- every failure with a **cause** (`UI`, `BACKEND`, `NETWORK`, `TIMEOUT`, `TEST`), the first error line and the full error text
+- links to that failure's **screenshot** (shown inline in Slack/Teams), **recording**, **trace** (opens in trace.playwright.dev) and **log** (`error-context.md`: error, page snapshot, test source), served by the console's `/api/evidence` route from the run's own artifact
+- stakeholders from `.github/qa-notify.json`: QA is always notified; frontend / backend / platform owners are added only when a failure of that cause appears
+
+Causes are a rule-based triage hint from the error text and spec type (`scripts/qa-notify.mjs`, tested against the real 6 Oct failing report), not a verdict.
+
+Setup: add repository secrets `SLACK_WEBHOOK_URL` (Slack incoming webhook) and/or `TEAMS_WEBHOOK_URL` (Teams Workflows webhook), and fill Slack member IDs / Teams emails in `.github/qa-notify.json`. Without them the PR comment and job summary still work.
+
 ## Evidence and limitations
 
 | Data | Provenance |

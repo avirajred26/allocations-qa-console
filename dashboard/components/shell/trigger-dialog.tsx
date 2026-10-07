@@ -28,6 +28,7 @@ const SUITE_OPTIONS: { value: Suite; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'desktop', label: 'Desktop' },
   { value: 'mobile', label: 'Mobile' },
+  { value: 'drill', label: 'Failure drill' },
 ];
 
 const FALLBACK: Record<number, string> = {
@@ -158,6 +159,12 @@ export function TriggerDialog({
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
+              {suite === 'drill' && (
+                <p className="text-[11px] leading-5 text-warning">
+                  Runs two deliberate, read-only failures (one UI, one API) on desktop to demonstrate the failure report:
+                  cause, screenshot, recording, trace and log. Expected result: failed.
+                </p>
+              )}
             </FieldSet>
 
             <Field data-invalid={error === 'Demo key rejected.' || undefined}>
