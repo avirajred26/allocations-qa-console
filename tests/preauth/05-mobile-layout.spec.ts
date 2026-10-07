@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { dismissConsent, emailField, submitButton, expectNoHorizontalScroll } from './helpers';
+import { dismissConsent, emailField, continueButton, passkeyButton, expectNoHorizontalScroll } from './helpers';
 
 /**
  * PRE-AUTH SMOKE · Mobile viewport layout
@@ -14,10 +14,14 @@ test('sign-in renders without overflow and controls stay tappable on mobile', as
   await expectNoHorizontalScroll(page);
 
   const email = emailField(page);
-  const submit = submitButton(page);
+  const cont = continueButton(page);
+  const passkey = passkeyButton(page);
   await expect(email).toBeInViewport();
-  await expect(submit).toBeInViewport();
+  await expect(cont).toBeInViewport();
+  await expect(passkey).toBeInViewport();
 
-  const box = await submit.boundingBox();
-  expect(box?.height ?? 0, 'tap target should be at least 40px tall').toBeGreaterThanOrEqual(40);
+  for (const [name, loc] of [['Continue', cont], ['Passkey', passkey]] as const) {
+    const box = await loc.boundingBox();
+    expect(box?.height ?? 0, `${name} tap target should be at least 40px tall`).toBeGreaterThanOrEqual(40);
+  }
 });

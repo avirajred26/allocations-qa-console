@@ -1,0 +1,159 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@layer components {
+  .qa-panel { @apply rounded-lg border border-border bg-card p-5; }
+  .qa-caption { @apply text-xs leading-5 text-muted-foreground; }
+  .qa-eyebrow { @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground; }
+  .qa-tag { @apply inline-flex rounded border border-border bg-background/40 px-2 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground; }
+  .qa-input { @apply w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20; }
+  .qa-field { @apply flex flex-col gap-2 text-xs text-muted-foreground; }
+  .qa-table { @apply w-full text-left text-[13px]; }
+  .qa-table th { @apply whitespace-nowrap border-b bg-muted/35 px-4 py-3 text-[11px] font-medium text-muted-foreground; }
+  .qa-table td { @apply border-b border-border/70 px-4 py-3; }
+  .qa-table tbody tr:last-child td { border-bottom: 0; }
+  .qa-table tbody tr { @apply transition-colors hover:bg-muted/40; }
+  .qa-table button { @apply focus-visible:outline-2 focus-visible:outline-primary; }
+  .qa-tabs { @apply flex flex-wrap gap-6 border-b text-[13px]; }
+  .qa-tabs button { @apply relative border-b-2 border-transparent py-3 text-muted-foreground transition hover:text-foreground; }
+  .qa-tabs button[aria-selected=true] { @apply border-primary font-medium text-primary; }
+  .qa-count { @apply ml-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground; }
+  .qa-link-button { @apply inline-flex items-center justify-center rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium transition hover:bg-muted; }
+  .readiness-hero { background: radial-gradient(ellipse at 8% 0%, rgb(248 113 113 / 0.10), transparent 65%), var(--card); }
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Dark mode is optional. The default is a quiet, high-contrast workspace. */
+:root.dark {
+  color-scheme: dark;
+  --radius: 0.5rem;
+  --background: oklch(0.17 0.02 255);
+  --foreground: oklch(0.94 0.01 250);
+  --card: oklch(0.21 0.025 255);
+  --card-foreground: oklch(0.94 0.01 250);
+  --popover: oklch(0.23 0.028 255);
+  --popover-foreground: oklch(0.94 0.01 250);
+  --primary: oklch(0.74 0.11 185);
+  --primary-foreground: oklch(0.18 0.03 220);
+  --secondary: oklch(0.27 0.03 255);
+  --secondary-foreground: oklch(0.92 0.01 250);
+  --muted: oklch(0.26 0.025 255);
+  --muted-foreground: oklch(0.72 0.02 255);
+  --accent: oklch(0.29 0.035 245);
+  --accent-foreground: oklch(0.95 0.01 250);
+  --destructive: oklch(0.7 0.17 22);
+  --success: oklch(0.76 0.13 160);
+  --warning: oklch(0.8 0.13 80);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.74 0.11 185);
+  --chart-1: oklch(0.74 0.11 185);
+  --chart-2: oklch(0.76 0.13 160);
+  --chart-3: oklch(0.8 0.13 80);
+  --chart-4: oklch(0.7 0.17 22);
+  --chart-5: oklch(0.6 0.05 255);
+  --sidebar: oklch(0.15 0.022 258);
+  --sidebar-foreground: oklch(0.9 0.012 250);
+  --sidebar-primary: oklch(0.74 0.11 185);
+  --sidebar-primary-foreground: oklch(0.18 0.03 220);
+  --sidebar-accent: oklch(0.24 0.03 255);
+  --sidebar-accent-foreground: oklch(0.96 0.01 250);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.74 0.11 185);
+}
+
+:root:not(.dark) {
+  color-scheme: light;
+  --radius: 0.45rem;
+  --background: #fafbfd;
+  --foreground: #202b3d;
+  --card: #ffffff;
+  --card-foreground: #202b3d;
+  --popover: #ffffff;
+  --popover-foreground: #202b3d;
+  --primary: #2563ae;
+  --primary-foreground: #ffffff;
+  --secondary: #edf1f6;
+  --secondary-foreground: #34445b;
+  --muted: #eef2f6;
+  --muted-foreground: #69788d;
+  --accent: #e9eff7;
+  --accent-foreground: #204f88;
+  --destructive: #c5414e;
+  --success: #25856e;
+  --warning: #a96b16;
+  --border: #e1e7ef;
+  --input: #dbe2ec;
+  --ring: #4a80bc;
+  --chart-1: #2563ae;
+  --chart-2: #25856e;
+  --chart-3: #c18b39;
+  --chart-4: #c5414e;
+  --chart-5: #8799b2;
+  --sidebar: #f3f6fa;
+  --sidebar-foreground: #445166;
+  --sidebar-primary: #2563ae;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e4ebf4;
+  --sidebar-accent-foreground: #1c3f6b;
+  --sidebar-border: #e1e7ef;
+  --sidebar-ring: #4a80bc;
+}
+
+::selection { background: color-mix(in srgb, var(--primary), transparent 80%); }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}

@@ -1,0 +1,28 @@
+import { CheckIcon, CircleDashedIcon, LockKeyholeIcon, ShieldCheckIcon } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
+import { EvidencePanels } from '@/components/evidence-panels';
+import { ConnectionNotice } from '@/components/connection-notice';
+import { REPO_URL } from '@/lib/fixture';
+import { LOCAL_EVIDENCE } from '@/lib/local-evidence';
+
+export const dynamic='force-dynamic';
+
+export default function HarnessPage(){
+  const connections=[['GitHub dispatch','GH_TOKEN'],['Demo key verification','DEMO_KEY_HASH'],['Redis endpoint','UPSTASH_REDIS_REST_URL'],['Redis authentication','UPSTASH_REDIS_REST_TOKEN']].map(([label,name])=>({label,name,configured:!!process.env[name]}));
+  return <>
+    <PageHeader title="Harness" description="What runs, what is mocked, and where the evidence stops." actions={<a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="qa-link-button">View repository ↗</a>}/>
+    <section className="qa-panel grid gap-6 md:grid-cols-[1.3fr_1fr]"><div><span className="qa-eyebrow text-primary">Pre-auth smoke · Playwright</span><h2 className="mt-3 text-2xl font-semibold tracking-tight">Small suite. Explicit boundaries.</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">Public entry points only, on desktop Chromium and mobile WebKit. No real credentials, no OTP requests, and no claim of authenticated product coverage. The first CI execution exposed wrong assumptions about the sign-in flow; the harness was corrected on 7 Oct and passes locally against the live surface.</p></div><div className="rounded-xl border bg-background/50 p-5"><h3 className="flex items-center gap-2 text-sm font-semibold"><ShieldCheckIcon className="size-4 text-primary"/>Safety boundary</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Sign-in validation tests arm a context-level guard before navigation. Non-GET/HEAD/OPTIONS requests are aborted, service workers are blocked, and attempted mutations to Allocations are counted.</p></div></section>
+    <section className="qa-panel !p-0 overflow-hidden"><div className="border-b p-5"><h2 className="font-semibold">Five smoke scenarios</h2><p className="qa-caption mt-1">Scope as implemented. Local run 7 Oct: 13 passed, 1 by-design skip. CI re-run pending.</p></div><div className="divide-y">{[
+      ['SM-001','Sign-in surface','Email + passkey controls render; the app\'s anonymous session probes (/api/auth/me, /api/auth/refresh) return 401; no other runtime errors.'],
+      ['SM-002','Passwordless validation','Empty and malformed email produce visible validation on Continue; no mutating request reaches the product (fail-closed guard, one allowlisted startup POST). Carries PRE-002.'],
+      ['SM-003','Anonymous API boundary','GET /api/auth/me without a session returns 401 with a machine-readable error and no user, token or email data.'],
+      ['SM-004','Security headers','Sign-in document carries HSTS (≥6 months), nosniff, clickjacking protection and a Content-Security-Policy.'],
+      ['SM-005','Mobile layout','iPhone 13 emulation: no horizontal overflow; email, Continue and passkey controls in viewport with ≥40px tap targets.'],
+    ].map(([id,title,text])=><div key={id} className="grid gap-2 p-5 sm:grid-cols-[90px_170px_1fr]"><span className="font-mono text-xs text-primary">{id}</span><h3 className="text-sm font-medium">{title}</h3><p className="text-sm leading-6 text-muted-foreground">{text}</p></div>)}</div></section>
+    <EvidencePanels/>
+    <section className="qa-panel"><h2 className="font-semibold">Next harness work</h2><ol className="mt-4 space-y-3">{LOCAL_EVIDENCE.actions.map((action,i)=><li key={action} className="flex gap-3 text-sm leading-6 text-muted-foreground"><span className="font-mono text-primary">0{i+1}</span>{action}</li>)}</ol></section>
+    <section id="connections" className="scroll-mt-20"><h2 className="mb-1 font-semibold">Server connections</h2><p className="qa-caption mb-4">Presence checks only — no secret values reach the browser. Configured does not mean verified.</p><div className="grid gap-3 sm:grid-cols-2">{connections.map(c=><div key={c.name} className="qa-panel flex items-start gap-3">{c.configured?<CheckIcon className="mt-1 size-4 text-success"/>:<CircleDashedIcon className="mt-1 size-4 text-muted-foreground"/>}<div className="min-w-0"><h3 className="text-sm font-medium">{c.label}<span className={`ml-2 text-xs ${c.configured?'text-success':'text-warning'}`}>{c.configured?'Configured · unverified':'Not configured'}</span></h3><p className="mt-2 break-all font-mono text-xs text-muted-foreground">{c.name}</p></div></div>)}</div></section>
+    <ConnectionNotice/>
+    <section className="qa-panel"><h2 className="flex items-center gap-2 font-semibold"><LockKeyholeIcon className="size-4 text-primary"/>Honest by design</h2><div className="mt-4 grid gap-5 md:grid-cols-3">{[['Real backend','Server-side key hashing, atomic Redis cooldown/daily cap, owner-checked cleanup, and uncertain dispatch handling. Live Redis verification is still pending.'],['Fixture + mock','Scenario history is seeded. Authenticated flows require credentials; issue keys are examples. Edits are local to this tab and reset on reload.'],['Recorded, not live','The local and CI totals are actual historical executions. The CI report uploaded successfully even though tests failed. Artifacts are retained by GitHub for a limited time.']].map(([title,body])=><div key={title}><h3 className="text-sm font-medium">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p></div>)}</div></section>
+  </>;
+}

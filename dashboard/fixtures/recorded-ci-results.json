@@ -1,0 +1,258 @@
+{
+  "provenance": "Imported from results.json in GitHub Actions artifact playwright-report-manual-check-20261007-01",
+  "runId": "37522348772",
+  "startTime": "2026-10-06T19:55:06.083Z",
+  "durationMs": 94329.66100000001,
+  "stats": {
+    "startTime": "2026-10-06T19:55:06.083Z",
+    "duration": 94329.66100000001,
+    "expected": 2,
+    "skipped": 5,
+    "unexpected": 7,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "id": "3b3221b594a0681b36b7-5cb7dab6a0ca1466be09-desktop-chromium",
+      "title": "page loads with Allocations branding and no runtime errors",
+      "file": "preauth/01-landing.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "unexpected",
+      "status": "failed",
+      "durationMs": 1073,
+      "retries": 1,
+      "error": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 ()\n\nexpect(received).toHaveLength(expected)\n\nExpected length: 0\nReceived length: 1\nReceived array:  [\"Failed to load resource: the server responded with a status of 401 ()\"]",
+      "annotations": [],
+      "attachments": [
+        "screenshot",
+        "video",
+        "error-context",
+        "trace"
+      ]
+    },
+    {
+      "id": "3b3221b594a0681b36b7-5c8b5165ae93e227755c-mobile-iphone",
+      "title": "page loads with Allocations branding and no runtime errors",
+      "file": "preauth/01-landing.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 12677,
+      "retries": 0,
+      "error": "",
+      "annotations": [],
+      "attachments": []
+    },
+    {
+      "id": "3fdaa34e7dc1a8af3f24-3e792d917ef0025d060a-desktop-chromium",
+      "title": "exposes email and password fields with a submit control",
+      "file": "preauth/02-signin-form.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "unexpected",
+      "status": "failed",
+      "durationMs": 9498,
+      "retries": 1,
+      "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "annotations": [],
+      "attachments": [
+        "screenshot",
+        "video",
+        "error-context",
+        "trace"
+      ]
+    },
+    {
+      "id": "3fdaa34e7dc1a8af3f24-bbe66ed4add385e426a5-desktop-chromium",
+      "title": "empty submission triggers validation on click, and no mutating request is attempted",
+      "file": "preauth/02-signin-form.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "unexpected",
+      "status": "failed",
+      "durationMs": 11658,
+      "retries": 1,
+      "error": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "annotations": [],
+      "attachments": [
+        "screenshot",
+        "video",
+        "error-context",
+        "trace"
+      ]
+    },
+    {
+      "id": "3fdaa34e7dc1a8af3f24-db2d6f249abaf489db78-desktop-chromium",
+      "title": "malformed email is flagged when submitted, and no mutating request is attempted",
+      "file": "preauth/02-signin-form.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "unexpected",
+      "status": "failed",
+      "durationMs": 11703,
+      "retries": 1,
+      "error": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "annotations": [],
+      "attachments": [
+        "screenshot",
+        "video",
+        "error-context",
+        "trace"
+      ]
+    },
+    {
+      "id": "3fdaa34e7dc1a8af3f24-0689b49f892ccbe7c5c3-mobile-iphone",
+      "title": "exposes email and password fields with a submit control",
+      "file": "preauth/02-signin-form.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "unexpected",
+      "status": "failed",
+      "durationMs": 9502,
+      "retries": 1,
+      "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "annotations": [],
+      "attachments": [
+        "screenshot",
+        "video",
+        "error-context",
+        "trace"
+      ]
+    },
+    {
+      "id": "3fdaa34e7dc1a8af3f24-8f2d3c54bbfcbdc085c0-mobile-iphone",
+      "title": "empty submission triggers validation on click, and no mutating request is attempted",
+      "file": "preauth/02-signin-form.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "unexpected",
+      "status": "failed",
+      "durationMs": 11589,
+      "retries": 1,
+      "error": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "annotations": [],
+      "attachments": [
+        "screenshot",
+        "video",
+        "error-context",
+        "trace"
+      ]
+    },
+    {
+      "id": "3fdaa34e7dc1a8af3f24-c0d2fa4283f034fbcaf3-mobile-iphone",
+      "title": "malformed email is flagged when submitted, and no mutating request is attempted",
+      "file": "preauth/02-signin-form.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "unexpected",
+      "status": "failed",
+      "durationMs": 11528,
+      "retries": 1,
+      "error": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "annotations": [],
+      "attachments": [
+        "screenshot",
+        "video",
+        "error-context",
+        "trace"
+      ]
+    },
+    {
+      "id": "c6b7f66455e565bcbb02-7f50effb5cd112b47ab0-desktop-chromium",
+      "title": "forgot-password link leads to a reset form",
+      "file": "preauth/03-password-reset.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "skipped",
+      "status": "skipped",
+      "durationMs": 1018,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "no reset link exposed on this surface"
+        }
+      ],
+      "attachments": []
+    },
+    {
+      "id": "c6b7f66455e565bcbb02-35d06fe7a49b3b029cc5-mobile-iphone",
+      "title": "forgot-password link leads to a reset form",
+      "file": "preauth/03-password-reset.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "skipped",
+      "status": "skipped",
+      "durationMs": 1167,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "no reset link exposed on this surface"
+        }
+      ],
+      "attachments": []
+    },
+    {
+      "id": "cff46c6bb966121c630e-ac69ddc4e932bfe4c582-desktop-chromium",
+      "title": "header and footer links resolve",
+      "file": "preauth/04-public-links.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "skipped",
+      "status": "skipped",
+      "durationMs": 2191,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "no public allocations.com links on this surface"
+        }
+      ],
+      "attachments": []
+    },
+    {
+      "id": "cff46c6bb966121c630e-a0dd4409f013d52983ef-mobile-iphone",
+      "title": "header and footer links resolve",
+      "file": "preauth/04-public-links.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "skipped",
+      "status": "skipped",
+      "durationMs": 1116,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "no public allocations.com links on this surface"
+        }
+      ],
+      "attachments": []
+    },
+    {
+      "id": "3686e640ce2d98e9a0fd-0807d590c410faf1f346-desktop-chromium",
+      "title": "sign-in renders without overflow and controls stay tappable on mobile",
+      "file": "preauth/05-mobile-layout.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "skipped",
+      "status": "skipped",
+      "durationMs": 253,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "skip",
+          "description": "mobile-only check"
+        }
+      ],
+      "attachments": []
+    },
+    {
+      "id": "3686e640ce2d98e9a0fd-4784a8e7fd8e7a6f8f2b-mobile-iphone",
+      "title": "sign-in renders without overflow and controls stay tappable on mobile",
+      "file": "preauth/05-mobile-layout.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 4249,
+      "retries": 0,
+      "error": "",
+      "annotations": [],
+      "attachments": []
+    }
+  ]
+}

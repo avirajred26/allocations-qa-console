@@ -1,0 +1,1 @@
+export function SiteFooter(){return <footer className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t px-7 py-3 text-[10px] text-muted-foreground"><span>Independent assignment · not an official Allocations product</span><span className="font-mono">SOURCE-LABELLED EVIDENCE · 2026.10</span></footer>;}

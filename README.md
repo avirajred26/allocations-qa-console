@@ -1,123 +1,113 @@
-# Allocations QA Console
+# Allocations QA Console — updated local preview (harness corrected 7 Oct)
 
-Independent QA demonstration for **dashboard.allocations.com**, built as a Lead QA assignment. This is not an official Allocations product.
+Independent Lead QA assignment for dashboard.allocations.com. Not an official Allocations product. This package combines the original Playwright harness and GitHub workflow with the completed v0-derived dashboard, including the latest local redesign (7 October 2026).
 
-**Live console:** not deployed · **Workflow:** [`qa-run.yml`](.github/workflows/qa-run.yml)
+**Not deployed. Live dispatch is not configured.** No credentials are included.
 
-## Verified status — 7 October 2026
+## Harness status (7 October 2026)
 
-This repository is a work-in-progress submission, not a completed production console.
+The 6 Oct CI run failed 7/14 because the harness assumed a password form. The real sign-in is
+passwordless (email code + passkey) and POSTs `/api/auth/refresh` on startup; the fail-closed guard was
+aborting that and freezing the page. Corrected harness, run locally against the live surface:
+**13 passed, 0 failed, 1 by-design skip** (SM-005 is mobile-only and skips on the desktop project).
 
-- Both packages install with `npm ci` and pass TypeScript checks. The Next.js production build passes.
-- The first live harness run finished with **3 passed, 6 failed, 5 skipped** across desktop Chromium and mobile WebKit. These results are separate from the seeded fixture.
-- The live sign-in surface uses email codes/passkeys, not the password form assumed by SM-002. Its startup session-refresh POST is blocked by SM-002's fail-closed network guard, so the guarded page displays a session-loading error before the form appears. The guard has not been weakened to make the tests pass.
-- Password-reset and public-link checks skipped when those elements were not found; the desktop mobile-only check is intentionally skipped. These skips are not passing coverage.
-- The dashboard currently contains real API implementation and a placeholder UI. Redis integration tests, hosted workflow execution, the four-page UI, and deployment remain unverified or unfinished.
-- Dashboard PostCSS is pinned through an override to `8.5.29`; the local dependency audit reported zero vulnerabilities after that update.
+Replaced checks: SM-003 is now the anonymous API boundary (`/api/auth/me` → 401, no user data) and
+SM-004 is security headers (HSTS ≥ 6 months, nosniff, frame protection, CSP). Both pass.
 
-Before presenting a working demo, adapt the harness to the actual passwordless surface while preserving its no-credential-submission boundary, run the scratch-Redis tests, and implement/deploy the UI. Do not interpret the fixture verdict as a production release assessment.
+One product finding surfaced, recorded as a Playwright annotation (not a failure):
+**PRE-002** — the sign-in validation message is plain text with no `aria-invalid` / `aria-describedby`
+on the input; assistive technology is not told the field is in error.
 
-## What it is
+Next: re-run `qa-run.yml` in GitHub Actions so the recorded CI result reflects the corrected harness.
 
-| Part | Where | Real or mock? |
-|---|---|---|
-| Pre-auth demonstration harness — 5 Playwright checks, desktop + iPhone 13 | `tests/preauth/` | **Real.** Runs against the public sign-in surface. Never submits credentials. |
-| GitHub Actions workflow with `run_ref` correlation and report artifacts | `.github/workflows/qa-run.yml` | **Real.** |
-| Trigger + status API with demo-key auth, atomic Upstash cooldown/daily cap (Lua), owner-checked rollback | `dashboard/` — a runnable Next.js 15 package: backend routes + placeholder shell | **Real backend.** UI pages are generated from `V0_PROMPT.md` and dropped over the shell. |
-| Scenario history for SPV / onboarding / KYC / capital-call / distribution flows | `fixtures/scenario-history.json` | **Fixture.** Every row is seeded — the pre-auth rows mirror the real checks but are not imported results; authenticated flows need Allocations credentials. Live runs are shown at workflow level only. |
-| Release Readiness verdict + Slack-copy | `dashboard/V0_PROMPT.md` | **Planned UI, not implemented.** The prompt requires fixture and live evidence to remain labelled and separate. |
+## Start the dashboard
 
-## Definition of done
-A reviewer can: trigger the one approved workflow with the demo key → see its correlated status →
-open real pre-auth evidence (HTML report, traces on failure) → tell fixture data from live data →
-copy an honest release verdict into Slack.
-
-## Repository layout
-```
-.                      Playwright harness (root package)
-├── tests/preauth/     5 pre-auth specs + helpers
-├── .github/workflows/ qa-run.yml (workflow_dispatch, run_ref correlation)
-├── fixtures/          scenario-history.json (labelled fixture)
-└── dashboard/         Next.js 15 package — API routes, libs, trigger tests, v0 prompt
+```sh
+cd dashboard
+pnpm install --frozen-lockfile
+pnpm dev --hostname 127.0.0.1 --port 3000
 ```
 
-## Run the harness locally
-```bash
+Open http://127.0.0.1:3000. No environment file is required to explore the UI, fixtures, or recorded CI report. Live triggering remains blocked without its backend credentials.
+
+The local preview was verified on Node 24.15.0 and pnpm 11.19.0 with the included pnpm lockfile. The root harness is a separate npm package with its own package-lock.json. Do not use the old dashboard npm lockfile from a previous archive; this updated dashboard uses pnpm.
+
+Production preview and local logic checks:
+
+```sh
+pnpm typecheck
+pnpm exec playwright test tests/readiness.spec.ts tests/execution-records.spec.ts
+pnpm build
+pnpm start --hostname 127.0.0.1 --port 3000
+```
+
+Run only one server on port 3000. Stop the dev server before starting the production preview. Rebuild after editing source if using `pnpm start`.
+
+## Included functionality
+
+- Release readiness, sample outcome distribution, outstanding risks and Slack-copy dialog.
+- Light/dark theme switch; preference persists in localStorage.
+- Grouped navigation, breadcrumbs and workspace search (Cmd/Ctrl + K).
+- Searchable run table, source tabs, status filters, sorting and dedicated run investigation pages.
+- Actual recorded CI detail at `/runs/ci-37522348772`: 14 test cases, final-attempt durations, retries, failure messages, skip reasons and original artifact link.
+- Scenario library with device history, local triage editing, owner/priority/classification/ticket fields, quarantine and reset.
+- Harness coverage and connection-status explanations.
+- Trigger dialog and real server-side dispatch/status/quota implementation. The dialog shows missing setup and prevents dispatch when quota is unavailable.
+- Original root Playwright harness, fail-closed sign-in checks and `.github/workflows/qa-run.yml`.
+
+## Evidence and limitations
+
+| Data | Provenance |
+| --- | --- |
+| Scenario library and release verdict | Seeded fixture + authenticated mocks, not production evidence. Initial verdict is NO-GO because INV-020 is a mocked failed blocker. |
+| Seven sample execution groups | Grouped from existing fixture history by reference, product flow and device. They are not GitHub workflows. |
+| Recorded CI | Imported static snapshot from the actual report artifact: 2 passed, 7 failed, 5 skipped. Started 2026-10-06 19:55 UTC (7 October in India). |
+| Recorded local run | Aggregate snapshot: 3 passed, 6 failed, 5 skipped. No per-test details imported for this entry. |
+| Live session runs | Real dispatch metadata, once configured. Workflow conclusions never manufacture scenario outcomes. |
+
+The first harness executions exposed incorrect password-form assumptions and a blocked startup refresh request on the actual email-code/passkey sign-in surface. These are harness failures, not verified product defects. Skips do not count as passes. Keep the no-credential-submission boundary while adapting the checks.
+
+Triage edits are in-memory, shared between the library/readiness/Slack copy, and lost on reload. Example issue keys are not synced to an issue tracker. Theme preference is stored in localStorage; non-sensitive live run metadata is stored in sessionStorage. No demo key is persisted.
+
+Verified for this package's source: dashboard typecheck, production build and seven logic/evidence-integrity tests. Desktop Chrome checks covered theme switching/persistence, run search, list-to-detail navigation, real error expansion and the blocked trigger dialog. Full mobile/all-interaction regression, scratch Redis integration tests and live dashboard dispatch are still pending.
+
+## Original harness
+
+From the repository root (not dashboard):
+
+```sh
 npm ci
 npx playwright install --with-deps chromium webkit
-npm test            # both projects
-npm run test:mobile # iPhone 13 only
-npm run report
+npm test
 ```
 
-## Run the backend locally
-```bash
-cd dashboard
-cp .env.example .env.local   # fill in values
-npm ci && npm run dev
-# trigger-route concurrency/rollback tests (needs a scratch Upstash DB):
-# Admission tests never call GitHub. Start the server with a controlled dispatch outcome:
-ALLOW_TEST_NAMESPACE=1 TEST_COOLDOWN_SECONDS=1 TEST_DISPATCH_MODE=accept npm run dev
-DEMO_KEY=<key> TEST_DISPATCH_MODE=accept npm test    # concurrency, quota, 20-run boundary
-ALLOW_TEST_NAMESPACE=1 TEST_COOLDOWN_SECONDS=1 TEST_DISPATCH_MODE=reject npm run dev
-DEMO_KEY=<key> TEST_DISPATCH_MODE=reject npm test    # rollback + refund
-ALLOW_TEST_NAMESPACE=1 TEST_COOLDOWN_SECONDS=1 TEST_DISPATCH_MODE=uncertain npm run dev
-DEMO_KEY=<key> TEST_DISPATCH_MODE=uncertain npm test # no refund on ambiguous dispatch
-ALLOW_TEST_NAMESPACE=1 TEST_COOLDOWN_SECONDS=1 TEST_DISPATCH_MODE=accept TEST_ACQUIRE_TIMEOUT_MS=0 npm run dev
-DEMO_KEY=<key> TEST_DISPATCH_MODE=accept TEST_ACQUIRE_TIMEOUT_MS=0 npm test   # timeout-branch smoke (503)
-# Ordered ACQUIRE/CANCEL proof — talks to the scratch Upstash DB directly, every op awaited:
-UPSTASH_REDIS_REST_URL=... UPSTASH_REDIS_REST_TOKEN=... npm test -- tests/admission.spec.ts
+These commands contact the actual public Allocations surface. They are not needed just to explore the local UI. The known harness failures above remain unresolved; do not present it as a green suite.
+
+## Connect live triggering later
+
+Use `dashboard/.env.example` as the environment-variable inventory. Configure these privately, never in client code or version control:
+
+- `GH_TOKEN`: fine-grained GitHub PAT, Actions read/write for this repository only.
+- `GH_OWNER`, `GH_REPO`, `GH_WORKFLOW`, `GH_BRANCH`: the fixed dispatch destination.
+- `DEMO_KEY_HASH`: SHA-256 hash of a privately generated demo key. Only share the original key privately with reviewers and rotate after review.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: Upstash credentials.
+
+Restart the server after changing environment variables. Readable quota alone does not verify all integration credentials. Live Redis tests need a scratch database; the test instructions are in `dashboard/tests/admission.spec.ts` and `dashboard/tests/trigger.spec.ts`. All `ALLOW_TEST_NAMESPACE` and `TEST_*` seams are dev-only and must never be set on a public deployment.
+
+Admission validates the key before atomic Redis cooldown/daily-cap checks. Exact `run_ref` names correlate workflow dispatches. Definitive rejection can release the owner-checked slot; ambiguous dispatch is not refunded. No run is invented when confirmation times out.
+
+## Project layout
+
+```text
+tests/preauth/                 Original five smoke specs and helpers
+.github/workflows/qa-run.yml   Real workflow_dispatch workflow
+fixtures/                     Original seeded history
+dashboard/app/                Console pages, run detail route and server API routes
+dashboard/components/         UI, providers, navigation, dialogs and run investigation
+dashboard/lib/                Auth, Redis, GitHub, readiness and evidence logic
+dashboard/fixtures/           Seeded history + sanitized recorded CI snapshot
+dashboard/tests/              Unit/evidence tests and scratch-Redis integration tests
+dashboard/V0_PROMPT.md         Historical v0 generation brief, not the current status
 ```
 
-## Deploy the console
-1. Generate the UI in v0.dev using `dashboard/V0_PROMPT.md`.
-2. Drop `dashboard/lib/*` and `dashboard/app/api/**` into the v0 project; `npm i @upstash/redis`.
-3. Vercel → add Upstash Redis integration (free tier).
-4. Create a **fine-grained PAT** scoped to this repo, permission *Actions: read & write* only.
-5. `openssl rand -base64 32` → that's the demo key. Store `printf '%s' "$KEY" | sha256sum | cut -d' ' -f1` as `DEMO_KEY_HASH`. Set the rest from `.env.example`.
-6. Deploy. Share the demo key with reviewers in the submission message. **Rotate it after review.**
-
-## Guardrails on `/api/trigger`
-Validate key (SHA-256, `timingSafeEqual` on buffers) → one Lua script does
-`SET trigger:cooldown <owner> NX EX 30` + date-scoped `INCR` + `EXPIRE` on first increment +
-reject > 20, so admission is atomic → dispatch fixed workflow only → on GitHub failure a second
-script releases **only if the cooldown is still owned by this request** and decrements the counter.
-Run correlation matches GitHub's `display_title` exactly against `QA run <run_ref>`.
-
-Failure semantics are deliberate and explicitly classified (`classifyDispatchStatus`):
-- `204` → **accepted**.
-- `400 401 403 404 422` → **rejected** — GitHub definitively refused, no side effects → refund
-  (owner-checked, against the original admission keys, so a request crossing UTC midnight never
-  decrements tomorrow's counter).
-- `5xx`, `429`, anything else, or a thrown timeout → **uncertain** — a 504 can arrive after GitHub
-  accepted → *no refund*. The route returns 202 with `dispatch: "uncertain"`; the UI polls with a
-  3-minute deadline, then parks the run as **Unresolved** with a manual Recheck. Quota stays consumed.
-- Redis times out on ACQUIRE → the route schedules `cancelAdmission` via Next `after()` (runs inside the
-  request lifecycle, bounded). CANCEL is one script: it sets a cancel marker **and** releases if the lock
-  is ours. ACQUIRE checks that marker first, so a delayed ACQUIRE that lands *after* CANCEL is refused
-  rather than silently consuming quota. Script atomicity orders the check; the marker orders the two
-  HTTP requests.
-
-Timeouts: GitHub 8 s, Redis 2 s. Client sees fixed messages only; the key is never logged.
-`GET /api/quota` exposes runs-used/limit/cooldown for the UI and the tests (not secret).
-
-## Fixture note
-With the shipped fixture, Release Readiness computes **NO-GO** (INV-020 is a failed blocker). That is
-intentional: the fixture demonstrates a seeded blocker, not an observed production defect. The planned Slack-copy output must identify it as fixture evidence.
-
-## Deliberate restraint
-Testing a production sign-in with bad credentials from a public tool is a security smell, not a test.
-SM-002 enforces the boundary rather than promising it: service workers are blocked in the Playwright
-config, and a **context-level** route is armed before navigation that aborts *every* non-GET/HEAD/OPTIONS
-request to any destination (fail closed — no guessing the auth endpoint's name). Attempts to
-`*.allocations.com` are counted and must be zero; the tests also require real validation feedback
-caused by the click. The empty-submit case accepts any `invalid` event inside the form (capture
-listener on the form, armed just before the click). The malformed-email case is **bound to the email
-element**: an `invalid` event on that element (it does not bubble, so a required-password error cannot
-satisfy it) or that field's own `aria-invalid` / `aria-describedby` / `aria-errormessage` feedback
-changing. A pre-invalid field behind an inert `type="button"` fails both; a form where email accepts
-arbitrary text but password is required fails the malformed-email check. The probes never call
-`checkValidity()`/`reportValidity()`.
-
-Not covered by the controlled suites: the real HTTP classification path (bypassed by the dispatch
-seam) and the browser UI, which is generated from the v0 prompt.
+The ZIP intentionally excludes dependencies, Next builds, Git metadata, raw videos/traces/screenshots and credentials. Install dependencies locally. The original CI artifact remains linked on GitHub and is subject to its retention policy.
