@@ -7,7 +7,7 @@ import {
   type ScenarioStatus,
   type Triage,
 } from '@/lib/fixture';
-import { EVIDENCE_NOTES, LOCAL_EVIDENCE } from '@/lib/local-evidence';
+import { CI_EVIDENCE, EVIDENCE_NOTES, LOCAL_EVIDENCE } from '@/lib/local-evidence';
 import type { SessionRun } from '@/lib/run-types';
 
 export type TriageMap = Record<string, Triage | undefined>;
@@ -196,7 +196,7 @@ export function buildSlackUpdate(args: {
       const state = args.triage[s.id]?.quarantined ? 'quarantined' : latestStatus(s);
       return `${s.id} (${sourceTag(s)}) ${state} — ${ticket ? `${ticket} (example ticket)` : 'untracked'} must be stabilised before removing quarantine`;
     }),
-    `Recorded local harness run ${LOCAL_EVIDENCE.isoDate}: ${LOCAL_EVIDENCE.passed} passed, ${LOCAL_EVIDENCE.failed} failed, ${LOCAL_EVIDENCE.skipped} skipped (by-design mobile-only skip on desktop). Finding PRE-002: sign-in validation message not ARIA-linked to the input — raise with frontend as P3. CI re-run of qa-run.yml pending so the recorded CI result matches the corrected harness.`,
+    `Recorded local harness run ${LOCAL_EVIDENCE.isoDate}: ${LOCAL_EVIDENCE.passed} passed, ${LOCAL_EVIDENCE.failed} failed, ${LOCAL_EVIDENCE.skipped} skipped (by-design mobile-only skip on desktop). Finding PRE-002: sign-in validation message not ARIA-linked to the input — raise with frontend as P3. Latest CI run ${CI_EVIDENCE.runRef} (GitHub Actions): ${CI_EVIDENCE.passed} passed, ${CI_EVIDENCE.failed} failed, ${CI_EVIDENCE.skipped} skipped — ${CI_EVIDENCE.url}`,
   ];
 
   return [

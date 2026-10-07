@@ -40,3 +40,9 @@ export const CI_EVIDENCE = {
   artifact: 'playwright-report-ci-corrected-01',
   note: 'Corrected harness run in GitHub Actions on 7 October 2026: 13 passed, 0 failed, 1 by-design skip (SM-005 is mobile-only and skips on desktop-chromium).',
 } as const;
+
+/** Every qa-run.yml workflow run recorded from GitHub Actions, oldest first. Totals copied from each run's results.json. */
+export const CI_HISTORY = [
+  { runRef: 'manual-check-20261007-01', runId: '37522348772', isoDate: '2026-10-06', passed: 2, failed: 7, skipped: 5, label: 'Before harness fix' },
+  { runRef: CI_EVIDENCE.runRef, runId: '37567120072', isoDate: '2026-10-07', passed: CI_EVIDENCE.passed, failed: CI_EVIDENCE.failed, skipped: CI_EVIDENCE.skipped, label: 'Corrected harness' },
+] as const;
