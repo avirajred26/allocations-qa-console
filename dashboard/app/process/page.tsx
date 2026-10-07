@@ -136,7 +136,7 @@ export default function ProcessPage() {
 
       <Section id="checks" icon={ClipboardCheckIcon} title="Test inventory" intro="Automated checks today (each runs on desktop Chromium and iPhone 13 WebKit unless noted). Authenticated product flows stay in the scenario library as labelled mocks.">
         <div className="-m-5 overflow-x-auto"><table className="qa-table min-w-[720px]"><thead><tr><th>ID</th><th>Level</th><th>What it proves</th><th>Gate</th></tr></thead><tbody>
-          {CHECKS.map(([id, level, what]) => <tr key={id}><td className="font-mono text-xs text-primary">{id}</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">{level}</span></td><td className="text-xs leading-5">{what}</td><td className="text-xs text-muted-foreground">{level === 'API' ? 'Pre-merge · post-merge · regression' : 'Post-merge · regression'}</td></tr>)}
+          {CHECKS.map(([id, level, what]) => <tr key={id}><td className="whitespace-nowrap font-mono text-xs text-primary">{id}</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">{level}</span></td><td className="text-xs leading-5">{what}</td><td className="text-xs text-muted-foreground">{level === 'API' ? 'Pre-merge · post-merge · regression' : 'Post-merge · regression'}</td></tr>)}
           <tr><td className="font-mono text-xs text-warning">DRILL</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">UI + API</span></td><td className="text-xs leading-5">Two deliberate failures that exercise the reporting path end to end; never part of a gate</td><td className="text-xs text-muted-foreground">Manual only</td></tr>
         </tbody></table></div>
       </Section>

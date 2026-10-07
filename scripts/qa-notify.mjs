@@ -280,7 +280,7 @@ async function main() {
   const publicCtx = { ...ctx, token: undefined };
   writeFileSync('qa-notify-report.json', JSON.stringify({ ctx: publicCtx, report }, null, 2));
   // Read by the console (run history + run report pages). `stats` keeps Playwright's own field names.
-  writeFileSync('qa-summary.json', JSON.stringify({ run_ref: env.RUN_REF ?? null, suite: env.SUITE ?? null, scope: env.QA_SCOPE ?? 'full', phase: ctx.phase, stats: raw?.stats ?? null, ctx: publicCtx, report }));
+  writeFileSync('qa-summary.json', JSON.stringify({ run_ref: env.RUN_REF ?? null, suite: env.SUITE ?? null, scope: ctx.phase === 'drill' ? 'drill' : env.QA_SCOPE ?? 'full', phase: ctx.phase, stats: raw?.stats ?? null, ctx: publicCtx, report }));
   if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `${md}\n`);
   const notifyOn = config.notify?.[ctx.phase] ?? 'always';
   const shouldNotify = notifyOn === 'always' || (notifyOn === 'failure' && !headline(ctx, report).ok);

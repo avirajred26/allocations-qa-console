@@ -78,7 +78,7 @@ function TriggerButton() {
 export function TopBar() {
   const pathname=usePathname();
   const [dark,setDark]=useState(false);
-  const title=pathname.startsWith('/runs/')?'Run investigation':({'/':'Release readiness','/runs':'Runs','/history':'Scenario library','/harness':'Harness & coverage'} as Record<string,string>)[pathname]??'Workspace';
+  const title=pathname.startsWith('/runs/gh/')?'Run report':pathname.startsWith('/runs/')?'Run investigation':({'/':'Release readiness','/runs':'Runs','/history':'Scenario library','/harness':'Harness & coverage','/process':'QA/QC process'} as Record<string,string>)[pathname]??'Workspace';
   useEffect(()=>{
     try {
       const saved=localStorage.getItem('allocations-qa:theme');
