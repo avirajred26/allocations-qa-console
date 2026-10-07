@@ -50,6 +50,8 @@ Run only one server on port 3000. Stop the dev server before starting the produc
 - Grouped navigation, breadcrumbs and workspace search (Cmd/Ctrl + K).
 - Searchable run table, source tabs, status filters, sorting and dedicated run investigation pages.
 - Actual recorded CI detail at `/runs/ci-37567120072` (run_ref `ci-corrected-01`): 14 test cases, final-attempt durations, retries, failure messages, skip reasons and original artifact link.
+- Live run history (`/api/history`): every `qa-run.yml` run on `main` from the GitHub API, with pass/fail/skip totals read from each run's own artifact (`qa-summary-*`, falling back to `results.json` in the report) and cached in Redis. The workflow also runs every 6 hours, so the trend reflects real runs between demos.
+- Live targets (`/api/targets`): one anonymous GET of the Allocations sign-in page (status, latency, the four SM-004 security headers), GitHub workflow state, Redis ping and this deployment's commit. CDN-cached for 60 s, so the product sees at most one probe a minute from the console.
 - Scenario library with device history, local triage editing, owner/priority/classification/ticket fields, quarantine and reset.
 - Harness coverage and connection-status explanations.
 - Trigger dialog and real server-side dispatch/status/quota implementation. The dialog shows missing setup and prevents dispatch when quota is unavailable.

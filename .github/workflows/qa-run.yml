@@ -1,7 +1,11 @@
 name: QA run
-run-name: "QA run ${{ inputs.run_ref }}"
+run-name: "QA run ${{ inputs.run_ref || 'scheduled' }}"
 
 on:
+  # Light, read-only health signal so the console's run history reflects reality between demos.
+  # Same pre-auth checks as a manual run; 4 runs/day against the public sign-in page.
+  schedule:
+    - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
       run_ref:
@@ -23,7 +27,7 @@ on:
 
 # One run at a time per ref; never cancel a run a reviewer may be watching.
 concurrency:
-  group: qa-run-${{ inputs.run_ref }}
+  group: qa-run-${{ inputs.run_ref || github.run_id }}
   cancel-in-progress: false
 
 permissions:
@@ -31,15 +35,15 @@ permissions:
 
 jobs:
   preauth-smoke:
-    name: Pre-auth smoke (${{ inputs.suite }})
+    name: Pre-auth smoke (${{ inputs.suite || 'all' }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       BASE_URL: https://dashboard.allocations.com
       CI: "true"
-      RUN_REF: ${{ inputs.run_ref }}
-      TARGET: ${{ inputs.target }}
-      SUITE: ${{ inputs.suite }}
+      RUN_REF: ${{ inputs.run_ref || format('sched-{0}', github.run_id) }}
+      TARGET: ${{ inputs.target || 'prod-public' }}
+      SUITE: ${{ inputs.suite || 'all' }}
     steps:
       - name: Validate run_ref shape
         run: |
@@ -74,12 +78,32 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ inputs.run_ref }}
+          name: playwright-report-${{ env.RUN_REF }}
           path: |
             playwright-report
             test-results
           retention-days: 14
           if-no-files-found: warn
+
+      - name: Write machine-readable summary
+        if: always()
+        run: |
+          if [ -f test-results/results.json ]; then
+            node -e '
+              const r=require("./test-results/results.json");
+              require("fs").writeFileSync("qa-summary.json", JSON.stringify({run_ref:process.env.RUN_REF, suite:process.env.SUITE, stats:r.stats}));
+            '
+          fi
+
+      # Tiny artifact the console reads for run history, so it never has to download traces.
+      - name: Upload summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-summary-${{ env.RUN_REF }}
+          path: qa-summary.json
+          retention-days: 90
+          if-no-files-found: ignore
 
       - name: Write job summary
         if: always()

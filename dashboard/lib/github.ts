@@ -129,3 +129,50 @@ export async function findRun(runRef: string): Promise<RunStatus> {
     artifacts_url: `${run.html_url}#artifacts`,
   };
 }
+
+export type WorkflowRun = {
+  id: number;
+  display_title: string;
+  event: string;
+  status: 'queued' | 'in_progress' | 'completed' | string;
+  conclusion: RunStatus['conclusion'];
+  html_url: string;
+  run_started_at: string;
+  updated_at: string;
+};
+
+/** Every run of the fixed workflow on the fixed branch, newest first (dispatch and schedule alike). */
+export async function listRuns(perPage = 30): Promise<WorkflowRun[]> {
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?branch=${BRANCH}&per_page=${perPage}`);
+  if (!res.ok) throw new Error(`gh-list-${res.status}`);
+  const data = (await res.json()) as { workflow_runs: WorkflowRun[] };
+  return data.workflow_runs;
+}
+
+/**
+ * Downloads the first non-expired artifact of a run whose name starts with one of the
+ * prefixes (in preference order). GitHub answers with a redirect to blob storage; fetch
+ * drops the Authorization header on that cross-origin hop.
+ */
+export async function downloadArtifact(runId: number, prefixes: string[]): Promise<{ name: string; zip: Buffer } | null> {
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/runs/${runId}/artifacts?per_page=20`);
+  if (!res.ok) throw new Error(`gh-artifacts-${res.status}`);
+  const { artifacts } = (await res.json()) as { artifacts: Array<{ id: number; name: string; expired: boolean }> };
+  for (const prefix of prefixes) {
+    const a = artifacts.find((x) => !x.expired && x.name.startsWith(prefix));
+    if (!a) continue;
+    const zip = await gh(`/repos/${OWNER}/${REPO}/actions/artifacts/${a.id}/zip`, {}, 20_000);
+    if (!zip.ok) throw new Error(`gh-artifact-zip-${zip.status}`);
+    return { name: a.name, zip: Buffer.from(await zip.arrayBuffer()) };
+  }
+  return null;
+}
+
+/** Workflow state ("active" / "disabled_*") and round-trip time; used by the targets panel. */
+export async function workflowState(): Promise<{ state: string; ms: number }> {
+  const t0 = Date.now();
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}`, {}, 5000);
+  if (!res.ok) throw new Error(`gh-workflow-${res.status}`);
+  const { state } = (await res.json()) as { state: string };
+  return { state, ms: Date.now() - t0 };
+}
