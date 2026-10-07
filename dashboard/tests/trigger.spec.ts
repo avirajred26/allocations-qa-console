@@ -46,6 +46,63 @@ test.describe('POST /api/trigger', () => {
     expect(await used(request, n)).toBe(0);
   });
 
+  test.describe('remembered session (controlled ACCEPT)', () => {
+    test.skip(MODE !== 'accept' || ACQUIRE_TIMEOUT_FORCED, 'requires server started with TEST_DISPATCH_MODE=accept (and no forced acquire timeout)');
+
+    const post = (ctx: APIRequestContext, namespace: string, data: Record<string, unknown>, cookie?: string) =>
+      ctx.post('/api/trigger', { data: { suite: 'desktop', ...data }, headers: { 'x-trigger-namespace': namespace, ...(cookie ? { cookie } : {}) } });
+    const sessionCookie = (setCookie: string | undefined) => setCookie?.match(/qa_demo_session=[^;]+/)?.[0];
+
+    test('a valid key sets an HttpOnly, SameSite=Strict session cookie scoped to /api', async ({ playwright, baseURL }) => {
+      const ctx = await playwright.request.newContext({ baseURL });
+      const r = await post(ctx, ns(), { demoKey: KEY });
+      expect(r.status()).toBe(202);
+      const sc = r.headers()['set-cookie'] ?? '';
+      expect(sc).toMatch(/qa_demo_session=\d{10}\.[A-Za-z0-9_-]{43}/);
+      for (const attr of ['HttpOnly', 'SameSite=Strict', 'Path=/api', 'Max-Age=28800']) expect(sc).toContain(attr);
+      expect(sc).not.toContain(KEY);
+      expect(typeof (await r.json()).remembered).toBe('number');
+      await ctx.dispose();
+    });
+
+    test('the cookie alone admits the next run; a tampered cookie and a wrong key are refused', async ({ playwright, baseURL }) => {
+      const ctx = await playwright.request.newContext({ baseURL });
+      const n = ns();
+      const first = await post(ctx, n, { demoKey: KEY });
+      expect(first.status()).toBe(202);
+      const cookie = sessionCookie(first.headers()['set-cookie']);
+      expect(cookie).toBeTruthy();
+      await sleep(1200); // TEST_COOLDOWN_SECONDS=1
+      const fresh = await playwright.request.newContext({ baseURL });
+      const second = await post(fresh, n, {}, cookie);
+      expect(second.status(), 'cookie without key').toBe(202);
+      await sleep(1200);
+      const tampered = cookie!.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A'));
+      expect((await post(fresh, n, {}, tampered)).status(), 'tampered cookie').toBe(401);
+      expect((await post(fresh, n, { demoKey: 'wrong-key-wrong-key-wrong' }, cookie)).status(), 'wrong key beats a valid cookie').toBe(401);
+      expect(await used(fresh, n)).toBe(2);
+      await ctx.dispose();
+      await fresh.dispose();
+    });
+
+    test('remember:false sets no cookie; /api/session reports and forgets a session', async ({ playwright, baseURL }) => {
+      const ctx = await playwright.request.newContext({ baseURL });
+      const off = await post(ctx, ns(), { demoKey: KEY, remember: false });
+      expect(off.status()).toBe(202);
+      expect(off.headers()['set-cookie']).toBeUndefined();
+      const on = await post(ctx, ns(), { demoKey: KEY });
+      const cookie = sessionCookie(on.headers()['set-cookie'])!;
+      const fresh = await playwright.request.newContext({ baseURL });
+      const s = await fresh.get('/api/session', { headers: { cookie } });
+      expect(await s.json()).toMatchObject({ active: true });
+      expect((await (await fresh.get('/api/session')).json()).active).toBe(false);
+      const del = await fresh.delete('/api/session', { headers: { cookie } });
+      expect(del.headers()['set-cookie']).toMatch(/qa_demo_session=;.*Max-Age=0/);
+      await ctx.dispose();
+      await fresh.dispose();
+    });
+  });
+
   test.describe('controlled ACCEPT', () => {
     test.skip(MODE !== 'accept' || ACQUIRE_TIMEOUT_FORCED, 'requires server started with TEST_DISPATCH_MODE=accept (and no forced acquire timeout)');
 

@@ -44,6 +44,11 @@ async function gh(path: string, init: RequestInit = {}, timeoutMs = 8000): Promi
 /** 'drill' runs only tests/drill: deliberate, read-only failures that prove the failure-reporting path. */
 export type Suite = 'all' | 'desktop' | 'mobile' | 'drill';
 
+export type Scope = 'full' | 'api' | 'ui';
+/** Workflows the console may dispatch. qa-pr.yml is driven by PR events only. */
+export const DISPATCHABLE = ['qa-run.yml', 'qa-regression.yml'] as const;
+export type DispatchWorkflow = (typeof DISPATCHABLE)[number];
+
 export type DispatchOutcome = 'accepted' | 'rejected' | 'uncertain';
 
 /**
@@ -70,15 +75,19 @@ function testDispatchMode(): DispatchOutcome | null {
   return m === 'accept' ? 'accepted' : m === 'reject' ? 'rejected' : m === 'uncertain' ? 'uncertain' : null;
 }
 
-export async function dispatchRun(runRef: string, suite: Suite): Promise<DispatchOutcome> {
+export async function dispatchRun(runRef: string, suite: Suite, opts: { workflow?: DispatchWorkflow; scope?: Scope } = {}): Promise<DispatchOutcome> {
   const forced = testDispatchMode();
   if (forced) return forced;
 
+  const workflow = opts.workflow === 'qa-regression.yml' ? 'qa-regression.yml' : WORKFLOW;
+  const inputs = workflow === 'qa-regression.yml'
+    ? { run_ref: runRef }
+    : { run_ref: runRef, target: 'prod-public', suite, scope: opts.scope ?? 'full' };
   let res: Response;
   try {
-    res = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {
+    res = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${workflow}/dispatches`, {
       method: 'POST',
-      body: JSON.stringify({ ref: BRANCH, inputs: { run_ref: runRef, target: 'prod-public', suite } }),
+      body: JSON.stringify({ ref: BRANCH, inputs }),
     });
   } catch (err) {
     if ((err as Error).message === 'gh-token-missing') return 'rejected';
@@ -112,11 +121,12 @@ export function expectedDisplayTitle(runRef: string): string {
 }
 
 export async function findRun(runRef: string): Promise<RunStatus> {
-  const res = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?branch=${BRANCH}&per_page=30&event=workflow_dispatch`);
+  // Any dispatchable workflow: both set run-name "QA run <run_ref>" when started from the console.
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/runs?branch=${BRANCH}&per_page=40&event=workflow_dispatch`);
   if (!res.ok) throw new Error(`gh-list-${res.status}`);
   const data = (await res.json()) as { workflow_runs: Array<Record<string, any>> };
   const want = expectedDisplayTitle(runRef);
-  const run = data.workflow_runs.find((r) => r.display_title === want);
+  const run = data.workflow_runs.find((r) => r.display_title === want && QA_WORKFLOWS.includes(r.path));
   if (!run) return { found: false, run_ref: runRef };
   return {
     found: true,
