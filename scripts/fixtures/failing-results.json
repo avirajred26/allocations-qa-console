@@ -1,0 +1,1370 @@
+{
+ "config": {
+  "rootDir": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests",
+  "projects": [
+   {
+    "name": "desktop-chromium"
+   },
+   {
+    "name": "mobile-iphone"
+   }
+  ]
+ },
+ "suites": [
+  {
+   "title": "preauth/01-landing.spec.ts",
+   "file": "preauth/01-landing.spec.ts",
+   "column": 0,
+   "line": 0,
+   "specs": [
+    {
+     "title": "page loads with Allocations branding and no runtime errors",
+     "ok": false,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [],
+       "expectedStatus": "passed",
+       "projectId": "desktop-chromium",
+       "projectName": "desktop-chromium",
+       "results": [
+        {
+         "workerIndex": 0,
+         "parallelIndex": 0,
+         "status": "failed",
+         "duration": 1779,
+         "error": {
+          "message": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 () | Failed to load resource: the server responded with a status of 401 ()\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m2\u001b[39m\nReceived array:  \u001b[31m[\"Failed to load resource: the server responded with a status of 401 ()\", \"Failed to load resource: the server responded with a status of 401 ()\"]\u001b[39m",
+          "stack": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 () | Failed to load resource: the server responded with a status of 401 ()\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m2\u001b[39m\nReceived array:  \u001b[31m[\"Failed to load resource: the server responded with a status of 401 ()\", \"Failed to load resource: the server responded with a status of 401 ()\"]\u001b[39m\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts:22:74",
+          "location": {
+           "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts",
+           "column": 74,
+           "line": 22
+          },
+          "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m   \u001b[90m// Ignore known third-party analytics noise so the assertion stays meaningful.\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m relevant \u001b[33m=\u001b[39m errors\u001b[33m.\u001b[39mfilter((e) \u001b[33m=>\u001b[39m \u001b[33m!\u001b[39m\u001b[35m/analytics|gtag|segment|hotjar|intercom/i\u001b[39m\u001b[33m.\u001b[39mtest(e))\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m   expect(relevant\u001b[33m,\u001b[39m \u001b[32m`unexpected runtime errors: ${relevant.join(' | ')}`\u001b[39m)\u001b[33m.\u001b[39mtoHaveLength(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m\u001b[0m"
+         },
+         "errors": [
+          {
+           "location": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts",
+            "column": 74,
+            "line": 22
+           },
+           "message": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 () | Failed to load resource: the server responded with a status of 401 ()\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m2\u001b[39m\nReceived array:  \u001b[31m[\"Failed to load resource: the server responded with a status of 401 ()\", \"Failed to load resource: the server responded with a status of 401 ()\"]\u001b[39m\n\n  20 |   // Ignore known third-party analytics noise so the assertion stays meaningful.\n  21 |   const relevant = errors.filter((e) => !/analytics|gtag|segment|hotjar|intercom/i.test(e));\n> 22 |   expect(relevant, `unexpected runtime errors: ${relevant.join(' | ')}`).toHaveLength(0);\n     |                                                                          ^\n  23 | });\n  24 |\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts:22:74"
+          }
+         ],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:55:06.848Z",
+         "annotations": [],
+         "attachments": [
+          {
+           "name": "screenshot",
+           "contentType": "image/png",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium/test-failed-1.png"
+          },
+          {
+           "name": "video",
+           "contentType": "video/webm",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium/video.webm"
+          },
+          {
+           "name": "error-context",
+           "contentType": "text/markdown",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium/error-context.md"
+          },
+          {
+           "name": "trace",
+           "contentType": "application/zip",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium/trace.zip"
+          }
+         ],
+         "errorLocation": {
+          "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts",
+          "column": 74,
+          "line": 22
+         }
+        },
+        {
+         "workerIndex": 2,
+         "parallelIndex": 0,
+         "status": "failed",
+         "duration": 1073,
+         "error": {
+          "message": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 ()\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m1\u001b[39m\nReceived array:  \u001b[31m[\"Failed to load resource: the server responded with a status of 401 ()\"]\u001b[39m",
+          "stack": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 ()\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m1\u001b[39m\nReceived array:  \u001b[31m[\"Failed to load resource: the server responded with a status of 401 ()\"]\u001b[39m\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts:22:74",
+          "location": {
+           "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts",
+           "column": 74,
+           "line": 22
+          },
+          "snippet": "\u001b[0m \u001b[90m 20 |\u001b[39m   \u001b[90m// Ignore known third-party analytics noise so the assertion stays meaningful.\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m relevant \u001b[33m=\u001b[39m errors\u001b[33m.\u001b[39mfilter((e) \u001b[33m=>\u001b[39m \u001b[33m!\u001b[39m\u001b[35m/analytics|gtag|segment|hotjar|intercom/i\u001b[39m\u001b[33m.\u001b[39mtest(e))\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 22 |\u001b[39m   expect(relevant\u001b[33m,\u001b[39m \u001b[32m`unexpected runtime errors: ${relevant.join(' | ')}`\u001b[39m)\u001b[33m.\u001b[39mtoHaveLength(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 23 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 24 |\u001b[39m\u001b[0m"
+         },
+         "errors": [
+          {
+           "location": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts",
+            "column": 74,
+            "line": 22
+           },
+           "message": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 ()\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m1\u001b[39m\nReceived array:  \u001b[31m[\"Failed to load resource: the server responded with a status of 401 ()\"]\u001b[39m\n\n  20 |   // Ignore known third-party analytics noise so the assertion stays meaningful.\n  21 |   const relevant = errors.filter((e) => !/analytics|gtag|segment|hotjar|intercom/i.test(e));\n> 22 |   expect(relevant, `unexpected runtime errors: ${relevant.join(' | ')}`).toHaveLength(0);\n     |                                                                          ^\n  23 | });\n  24 |\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts:22:74"
+          }
+         ],
+         "stdout": [],
+         "stderr": [],
+         "retry": 1,
+         "startTime": "2026-10-06T19:55:11.290Z",
+         "annotations": [],
+         "attachments": [
+          {
+           "name": "screenshot",
+           "contentType": "image/png",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium-retry1/test-failed-1.png"
+          },
+          {
+           "name": "video",
+           "contentType": "video/webm",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium-retry1/video.webm"
+          },
+          {
+           "name": "error-context",
+           "contentType": "text/markdown",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium-retry1/error-context.md"
+          },
+          {
+           "name": "trace",
+           "contentType": "application/zip",
+           "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-01-landing-page-lo-1bcd0-nding-and-no-runtime-errors-desktop-chromium-retry1/trace.zip"
+          }
+         ],
+         "errorLocation": {
+          "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/01-landing.spec.ts",
+          "column": 74,
+          "line": 22
+         }
+        }
+       ],
+       "status": "unexpected"
+      }
+     ],
+     "id": "3b3221b594a0681b36b7-5cb7dab6a0ca1466be09",
+     "file": "preauth/01-landing.spec.ts",
+     "line": 8,
+     "column": 5
+    },
+    {
+     "title": "page loads with Allocations branding and no runtime errors",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [],
+       "expectedStatus": "passed",
+       "projectId": "mobile-iphone",
+       "projectName": "mobile-iphone",
+       "results": [
+        {
+         "workerIndex": 8,
+         "parallelIndex": 0,
+         "status": "passed",
+         "duration": 12677,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:55:41.997Z",
+         "annotations": [],
+         "attachments": []
+        }
+       ],
+       "status": "expected"
+      }
+     ],
+     "id": "3b3221b594a0681b36b7-5c8b5165ae93e227755c",
+     "file": "preauth/01-landing.spec.ts",
+     "line": 8,
+     "column": 5
+    }
+   ]
+  },
+  {
+   "title": "preauth/02-signin-form.spec.ts",
+   "file": "preauth/02-signin-form.spec.ts",
+   "column": 0,
+   "line": 0,
+   "specs": [],
+   "suites": [
+    {
+     "title": "Sign-in form",
+     "file": "preauth/02-signin-form.spec.ts",
+     "line": 97,
+     "column": 6,
+     "specs": [
+      {
+       "title": "exposes email and password fields with a submit control",
+       "ok": false,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "desktop-chromium",
+         "projectName": "desktop-chromium",
+         "results": [
+          {
+           "workerIndex": 1,
+           "parallelIndex": 1,
+           "status": "failed",
+           "duration": 9985,
+           "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 36,
+             "line": 105
+            },
+            "snippet": "\u001b[0m \u001b[90m 103 |\u001b[39m\n \u001b[90m 104 |\u001b[39m   test(\u001b[32m'exposes email and password fields with a submit control'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 105 |\u001b[39m     \u001b[36mawait\u001b[39m expect(emailField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 106 |\u001b[39m     \u001b[36mawait\u001b[39m expect(passwordField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m     \u001b[36mawait\u001b[39m expect(submitButton(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 36,
+              "line": 105
+             },
+             "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  103 |\n  104 |   test('exposes email and password fields with a submit control', async ({ page }) => {\n> 105 |     await expect(emailField(page)).toBeVisible();\n      |                                    ^\n  106 |     await expect(passwordField(page)).toBeVisible();\n  107 |     await expect(submitButton(page)).toBeVisible();\n  108 |   });\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-06T19:55:06.863Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 36,
+            "line": 105
+           }
+          },
+          {
+           "workerIndex": 4,
+           "parallelIndex": 1,
+           "status": "failed",
+           "duration": 9498,
+           "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 36,
+             "line": 105
+            },
+            "snippet": "\u001b[0m \u001b[90m 103 |\u001b[39m\n \u001b[90m 104 |\u001b[39m   test(\u001b[32m'exposes email and password fields with a submit control'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 105 |\u001b[39m     \u001b[36mawait\u001b[39m expect(emailField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 106 |\u001b[39m     \u001b[36mawait\u001b[39m expect(passwordField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m     \u001b[36mawait\u001b[39m expect(submitButton(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 36,
+              "line": 105
+             },
+             "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  103 |\n  104 |   test('exposes email and password fields with a submit control', async ({ page }) => {\n> 105 |     await expect(emailField(page)).toBeVisible();\n      |                                    ^\n  106 |     await expect(passwordField(page)).toBeVisible();\n  107 |     await expect(submitButton(page)).toBeVisible();\n  108 |   });\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-06T19:55:19.523Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium-retry1/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium-retry1/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium-retry1/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-desktop-chromium-retry1/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 36,
+            "line": 105
+           }
+          }
+         ],
+         "status": "unexpected"
+        }
+       ],
+       "id": "3fdaa34e7dc1a8af3f24-3e792d917ef0025d060a",
+       "file": "preauth/02-signin-form.spec.ts",
+       "line": 104,
+       "column": 3
+      },
+      {
+       "title": "empty submission triggers validation on click, and no mutating request is attempted",
+       "ok": false,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "desktop-chromium",
+         "projectName": "desktop-chromium",
+         "results": [
+          {
+           "workerIndex": 3,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 11621,
+           "error": {
+            "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 18,
+             "line": 79
+            },
+            "snippet": "\u001b[0m \u001b[90m 77 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 78 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m armFormProbe(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m anyField\u001b[33m:\u001b[39m \u001b[33mLocator\u001b[39m) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m   \u001b[36mawait\u001b[39m anyField\u001b[33m.\u001b[39mevaluate((el\u001b[33m:\u001b[39m \u001b[33mHTMLInputElement\u001b[39m) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m     \u001b[36mconst\u001b[39m scope\u001b[33m:\u001b[39m any \u001b[33m=\u001b[39m el\u001b[33m.\u001b[39mform \u001b[33m?\u001b[39m\u001b[33m?\u001b[39m document\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m     scope\u001b[33m.\u001b[39m__qaFormInvalid \u001b[33m=\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m     \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mscope\u001b[33m.\u001b[39m__qaFormBound) {\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 18,
+              "line": 79
+             },
+             "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  77 |  */\n  78 | async function armFormProbe(page: Page, anyField: Locator) {\n> 79 |   await anyField.evaluate((el: HTMLInputElement) => {\n     |                  ^\n  80 |     const scope: any = el.form ?? document;\n  81 |     scope.__qaFormInvalid = 0;\n  82 |     if (!scope.__qaFormBound) {\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-06T19:55:13.038Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 18,
+            "line": 79
+           }
+          },
+          {
+           "workerIndex": 5,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 11658,
+           "error": {
+            "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 18,
+             "line": 79
+            },
+            "snippet": "\u001b[0m \u001b[90m 77 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 78 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m armFormProbe(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m anyField\u001b[33m:\u001b[39m \u001b[33mLocator\u001b[39m) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m   \u001b[36mawait\u001b[39m anyField\u001b[33m.\u001b[39mevaluate((el\u001b[33m:\u001b[39m \u001b[33mHTMLInputElement\u001b[39m) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m     \u001b[36mconst\u001b[39m scope\u001b[33m:\u001b[39m any \u001b[33m=\u001b[39m el\u001b[33m.\u001b[39mform \u001b[33m?\u001b[39m\u001b[33m?\u001b[39m document\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m     scope\u001b[33m.\u001b[39m__qaFormInvalid \u001b[33m=\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m     \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mscope\u001b[33m.\u001b[39m__qaFormBound) {\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 18,
+              "line": 79
+             },
+             "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  77 |  */\n  78 | async function armFormProbe(page: Page, anyField: Locator) {\n> 79 |   await anyField.evaluate((el: HTMLInputElement) => {\n     |                  ^\n  80 |     const scope: any = el.form ?? document;\n  81 |     scope.__qaFormInvalid = 0;\n  82 |     if (!scope.__qaFormBound) {\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-06T19:55:25.389Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium-retry1/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium-retry1/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium-retry1/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-desktop-chromium-retry1/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 18,
+            "line": 79
+           }
+          }
+         ],
+         "status": "unexpected"
+        }
+       ],
+       "id": "3fdaa34e7dc1a8af3f24-bbe66ed4add385e426a5",
+       "file": "preauth/02-signin-form.spec.ts",
+       "line": 110,
+       "column": 3
+      },
+      {
+       "title": "malformed email is flagged when submitted, and no mutating request is attempted",
+       "ok": false,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "desktop-chromium",
+         "projectName": "desktop-chromium",
+         "results": [
+          {
+           "workerIndex": 6,
+           "parallelIndex": 1,
+           "status": "failed",
+           "duration": 11851,
+           "error": {
+            "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 17,
+             "line": 133
+            },
+            "snippet": "\u001b[0m \u001b[90m 131 |\u001b[39m   test(\u001b[32m'malformed email is flagged when submitted, and no mutating request is attempted'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ guard\u001b[33m,\u001b[39m page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 132 |\u001b[39m     \u001b[36mconst\u001b[39m email \u001b[33m=\u001b[39m emailField(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 133 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mfill(\u001b[32m'not-an-email'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 134 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mblur()\u001b[33m;\u001b[39m\n \u001b[90m 135 |\u001b[39m\n \u001b[90m 136 |\u001b[39m     \u001b[36mconst\u001b[39m probe \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m armFieldProbe(email)\u001b[33m;\u001b[39m \u001b[90m// bound to the EMAIL element, armed after fill\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 17,
+              "line": 133
+             },
+             "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  131 |   test('malformed email is flagged when submitted, and no mutating request is attempted', async ({ guard, page }) => {\n  132 |     const email = emailField(page);\n> 133 |     await email.fill('not-an-email');\n      |                 ^\n  134 |     await email.blur();\n  135 |\n  136 |     const probe = await armFieldProbe(email); // bound to the EMAIL element, armed after fill\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-06T19:55:29.741Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 17,
+            "line": 133
+           }
+          },
+          {
+           "workerIndex": 9,
+           "parallelIndex": 1,
+           "status": "failed",
+           "duration": 11703,
+           "error": {
+            "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 17,
+             "line": 133
+            },
+            "snippet": "\u001b[0m \u001b[90m 131 |\u001b[39m   test(\u001b[32m'malformed email is flagged when submitted, and no mutating request is attempted'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ guard\u001b[33m,\u001b[39m page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 132 |\u001b[39m     \u001b[36mconst\u001b[39m email \u001b[33m=\u001b[39m emailField(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 133 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mfill(\u001b[32m'not-an-email'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 134 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mblur()\u001b[33m;\u001b[39m\n \u001b[90m 135 |\u001b[39m\n \u001b[90m 136 |\u001b[39m     \u001b[36mconst\u001b[39m probe \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m armFieldProbe(email)\u001b[33m;\u001b[39m \u001b[90m// bound to the EMAIL element, armed after fill\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 17,
+              "line": 133
+             },
+             "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  131 |   test('malformed email is flagged when submitted, and no mutating request is attempted', async ({ guard, page }) => {\n  132 |     const email = emailField(page);\n> 133 |     await email.fill('not-an-email');\n      |                 ^\n  134 |     await email.blur();\n  135 |\n  136 |     const probe = await armFieldProbe(email); // bound to the EMAIL element, armed after fill\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-06T19:55:42.452Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium-retry1/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium-retry1/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium-retry1/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-desktop-chromium-retry1/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 17,
+            "line": 133
+           }
+          }
+         ],
+         "status": "unexpected"
+        }
+       ],
+       "id": "3fdaa34e7dc1a8af3f24-db2d6f249abaf489db78",
+       "file": "preauth/02-signin-form.spec.ts",
+       "line": 131,
+       "column": 3
+      },
+      {
+       "title": "exposes email and password fields with a submit control",
+       "ok": false,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "mobile-iphone",
+         "projectName": "mobile-iphone",
+         "results": [
+          {
+           "workerIndex": 10,
+           "parallelIndex": 1,
+           "status": "failed",
+           "duration": 10093,
+           "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 36,
+             "line": 105
+            },
+            "snippet": "\u001b[0m \u001b[90m 103 |\u001b[39m\n \u001b[90m 104 |\u001b[39m   test(\u001b[32m'exposes email and password fields with a submit control'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 105 |\u001b[39m     \u001b[36mawait\u001b[39m expect(emailField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 106 |\u001b[39m     \u001b[36mawait\u001b[39m expect(passwordField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m     \u001b[36mawait\u001b[39m expect(submitButton(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 36,
+              "line": 105
+             },
+             "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  103 |\n  104 |   test('exposes email and password fields with a submit control', async ({ page }) => {\n> 105 |     await expect(emailField(page)).toBeVisible();\n      |                                    ^\n  106 |     await expect(passwordField(page)).toBeVisible();\n  107 |     await expect(submitButton(page)).toBeVisible();\n  108 |   });\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-06T19:55:54.942Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 36,
+            "line": 105
+           }
+          },
+          {
+           "workerIndex": 11,
+           "parallelIndex": 1,
+           "status": "failed",
+           "duration": 9502,
+           "error": {
+            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 36,
+             "line": 105
+            },
+            "snippet": "\u001b[0m \u001b[90m 103 |\u001b[39m\n \u001b[90m 104 |\u001b[39m   test(\u001b[32m'exposes email and password fields with a submit control'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 105 |\u001b[39m     \u001b[36mawait\u001b[39m expect(emailField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                    \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 106 |\u001b[39m     \u001b[36mawait\u001b[39m expect(passwordField(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m     \u001b[36mawait\u001b[39m expect(submitButton(page))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 36,
+              "line": 105
+             },
+             "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  103 |\n  104 |   test('exposes email and password fields with a submit control', async ({ page }) => {\n> 105 |     await expect(emailField(page)).toBeVisible();\n      |                                    ^\n  106 |     await expect(passwordField(page)).toBeVisible();\n  107 |     await expect(submitButton(page)).toBeVisible();\n  108 |   });\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:105:36"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-06T19:56:05.843Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone-retry1/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone-retry1/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone-retry1/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-81a64-ields-with-a-submit-control-mobile-iphone-retry1/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 36,
+            "line": 105
+           }
+          }
+         ],
+         "status": "unexpected"
+        }
+       ],
+       "id": "3fdaa34e7dc1a8af3f24-0689b49f892ccbe7c5c3",
+       "file": "preauth/02-signin-form.spec.ts",
+       "line": 104,
+       "column": 3
+      },
+      {
+       "title": "empty submission triggers validation on click, and no mutating request is attempted",
+       "ok": false,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "mobile-iphone",
+         "projectName": "mobile-iphone",
+         "results": [
+          {
+           "workerIndex": 8,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 11784,
+           "error": {
+            "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 18,
+             "line": 79
+            },
+            "snippet": "\u001b[0m \u001b[90m 77 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 78 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m armFormProbe(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m anyField\u001b[33m:\u001b[39m \u001b[33mLocator\u001b[39m) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m   \u001b[36mawait\u001b[39m anyField\u001b[33m.\u001b[39mevaluate((el\u001b[33m:\u001b[39m \u001b[33mHTMLInputElement\u001b[39m) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m     \u001b[36mconst\u001b[39m scope\u001b[33m:\u001b[39m any \u001b[33m=\u001b[39m el\u001b[33m.\u001b[39mform \u001b[33m?\u001b[39m\u001b[33m?\u001b[39m document\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m     scope\u001b[33m.\u001b[39m__qaFormInvalid \u001b[33m=\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m     \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mscope\u001b[33m.\u001b[39m__qaFormBound) {\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 18,
+              "line": 79
+             },
+             "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  77 |  */\n  78 | async function armFormProbe(page: Page, anyField: Locator) {\n> 79 |   await anyField.evaluate((el: HTMLInputElement) => {\n     |                  ^\n  80 |     const scope: any = el.form ?? document;\n  81 |     scope.__qaFormInvalid = 0;\n  82 |     if (!scope.__qaFormBound) {\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-06T19:55:56.261Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 18,
+            "line": 79
+           }
+          },
+          {
+           "workerIndex": 12,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 11589,
+           "error": {
+            "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 18,
+             "line": 79
+            },
+            "snippet": "\u001b[0m \u001b[90m 77 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 78 |\u001b[39m \u001b[36masync\u001b[39m \u001b[36mfunction\u001b[39m armFormProbe(page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m anyField\u001b[33m:\u001b[39m \u001b[33mLocator\u001b[39m) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m   \u001b[36mawait\u001b[39m anyField\u001b[33m.\u001b[39mevaluate((el\u001b[33m:\u001b[39m \u001b[33mHTMLInputElement\u001b[39m) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m     \u001b[36mconst\u001b[39m scope\u001b[33m:\u001b[39m any \u001b[33m=\u001b[39m el\u001b[33m.\u001b[39mform \u001b[33m?\u001b[39m\u001b[33m?\u001b[39m document\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m     scope\u001b[33m.\u001b[39m__qaFormInvalid \u001b[33m=\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m     \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mscope\u001b[33m.\u001b[39m__qaFormBound) {\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 18,
+              "line": 79
+             },
+             "message": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  77 |  */\n  78 | async function armFormProbe(page: Page, anyField: Locator) {\n> 79 |   await anyField.evaluate((el: HTMLInputElement) => {\n     |                  ^\n  80 |     const scope: any = el.form ?? document;\n  81 |     scope.__qaFormInvalid = 0;\n  82 |     if (!scope.__qaFormBound) {\n    at armFormProbe (/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:79:18)\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:113:24"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-06T19:56:08.682Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone-retry1/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone-retry1/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone-retry1/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-98be0-tating-request-is-attempted-mobile-iphone-retry1/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 18,
+            "line": 79
+           }
+          }
+         ],
+         "status": "unexpected"
+        }
+       ],
+       "id": "3fdaa34e7dc1a8af3f24-8f2d3c54bbfcbdc085c0",
+       "file": "preauth/02-signin-form.spec.ts",
+       "line": 110,
+       "column": 3
+      },
+      {
+       "title": "malformed email is flagged when submitted, and no mutating request is attempted",
+       "ok": false,
+       "tags": [],
+       "tests": [
+        {
+         "timeout": 30000,
+         "annotations": [],
+         "expectedStatus": "passed",
+         "projectId": "mobile-iphone",
+         "projectName": "mobile-iphone",
+         "results": [
+          {
+           "workerIndex": 13,
+           "parallelIndex": 1,
+           "status": "failed",
+           "duration": 11782,
+           "error": {
+            "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 17,
+             "line": 133
+            },
+            "snippet": "\u001b[0m \u001b[90m 131 |\u001b[39m   test(\u001b[32m'malformed email is flagged when submitted, and no mutating request is attempted'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ guard\u001b[33m,\u001b[39m page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 132 |\u001b[39m     \u001b[36mconst\u001b[39m email \u001b[33m=\u001b[39m emailField(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 133 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mfill(\u001b[32m'not-an-email'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 134 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mblur()\u001b[33m;\u001b[39m\n \u001b[90m 135 |\u001b[39m\n \u001b[90m 136 |\u001b[39m     \u001b[36mconst\u001b[39m probe \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m armFieldProbe(email)\u001b[33m;\u001b[39m \u001b[90m// bound to the EMAIL element, armed after fill\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 17,
+              "line": 133
+             },
+             "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  131 |   test('malformed email is flagged when submitted, and no mutating request is attempted', async ({ guard, page }) => {\n  132 |     const email = emailField(page);\n> 133 |     await email.fill('not-an-email');\n      |                 ^\n  134 |     await email.blur();\n  135 |\n  136 |     const probe = await armFieldProbe(email); // bound to the EMAIL element, armed after fill\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 0,
+           "startTime": "2026-10-06T19:56:16.092Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 17,
+            "line": 133
+           }
+          },
+          {
+           "workerIndex": 15,
+           "parallelIndex": 0,
+           "status": "failed",
+           "duration": 11528,
+           "error": {
+            "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n",
+            "stack": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17",
+            "location": {
+             "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+             "column": 17,
+             "line": 133
+            },
+            "snippet": "\u001b[0m \u001b[90m 131 |\u001b[39m   test(\u001b[32m'malformed email is flagged when submitted, and no mutating request is attempted'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ guard\u001b[33m,\u001b[39m page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 132 |\u001b[39m     \u001b[36mconst\u001b[39m email \u001b[33m=\u001b[39m emailField(page)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 133 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mfill(\u001b[32m'not-an-email'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 134 |\u001b[39m     \u001b[36mawait\u001b[39m email\u001b[33m.\u001b[39mblur()\u001b[33m;\u001b[39m\n \u001b[90m 135 |\u001b[39m\n \u001b[90m 136 |\u001b[39m     \u001b[36mconst\u001b[39m probe \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m armFieldProbe(email)\u001b[33m;\u001b[39m \u001b[90m// bound to the EMAIL element, armed after fill\u001b[39m\u001b[0m"
+           },
+           "errors": [
+            {
+             "location": {
+              "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+              "column": 17,
+              "line": 133
+             },
+             "message": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\u001b[22m\n\n\n  131 |   test('malformed email is flagged when submitted, and no mutating request is attempted', async ({ guard, page }) => {\n  132 |     const email = emailField(page);\n> 133 |     await email.fill('not-an-email');\n      |                 ^\n  134 |     await email.blur();\n  135 |\n  136 |     const probe = await armFieldProbe(email); // bound to the EMAIL element, armed after fill\n    at /home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts:133:17"
+            }
+           ],
+           "stdout": [],
+           "stderr": [],
+           "retry": 1,
+           "startTime": "2026-10-06T19:56:28.613Z",
+           "annotations": [],
+           "attachments": [
+            {
+             "name": "screenshot",
+             "contentType": "image/png",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone-retry1/test-failed-1.png"
+            },
+            {
+             "name": "video",
+             "contentType": "video/webm",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone-retry1/video.webm"
+            },
+            {
+             "name": "error-context",
+             "contentType": "text/markdown",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone-retry1/error-context.md"
+            },
+            {
+             "name": "trace",
+             "contentType": "application/zip",
+             "path": "/home/runner/work/allocations-qa-console/allocations-qa-console/test-results/preauth-02-signin-form-Sig-aee6a-tating-request-is-attempted-mobile-iphone-retry1/trace.zip"
+            }
+           ],
+           "errorLocation": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/02-signin-form.spec.ts",
+            "column": 17,
+            "line": 133
+           }
+          }
+         ],
+         "status": "unexpected"
+        }
+       ],
+       "id": "3fdaa34e7dc1a8af3f24-c0d2fa4283f034fbcaf3",
+       "file": "preauth/02-signin-form.spec.ts",
+       "line": 131,
+       "column": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "preauth/03-password-reset.spec.ts",
+   "file": "preauth/03-password-reset.spec.ts",
+   "column": 0,
+   "line": 0,
+   "specs": [
+    {
+     "title": "forgot-password link leads to a reset form",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [
+        {
+         "type": "skip",
+         "description": "no reset link exposed on this surface",
+         "location": {
+          "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/03-password-reset.spec.ts",
+          "line": 15,
+          "column": 8
+         }
+        }
+       ],
+       "expectedStatus": "skipped",
+       "projectId": "desktop-chromium",
+       "projectName": "desktop-chromium",
+       "results": [
+        {
+         "workerIndex": 7,
+         "parallelIndex": 0,
+         "status": "skipped",
+         "duration": 1018,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:55:37.779Z",
+         "annotations": [
+          {
+           "type": "skip",
+           "description": "no reset link exposed on this surface",
+           "location": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/03-password-reset.spec.ts",
+            "line": 15,
+            "column": 8
+           }
+          }
+         ],
+         "attachments": []
+        }
+       ],
+       "status": "skipped"
+      }
+     ],
+     "id": "c6b7f66455e565bcbb02-7f50effb5cd112b47ab0",
+     "file": "preauth/03-password-reset.spec.ts",
+     "line": 9,
+     "column": 5
+    },
+    {
+     "title": "forgot-password link leads to a reset form",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [
+        {
+         "type": "skip",
+         "description": "no reset link exposed on this surface",
+         "location": {
+          "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/03-password-reset.spec.ts",
+          "line": 15,
+          "column": 8
+         }
+        }
+       ],
+       "expectedStatus": "skipped",
+       "projectId": "mobile-iphone",
+       "projectName": "mobile-iphone",
+       "results": [
+        {
+         "workerIndex": 14,
+         "parallelIndex": 0,
+         "status": "skipped",
+         "duration": 1167,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:56:20.997Z",
+         "annotations": [
+          {
+           "type": "skip",
+           "description": "no reset link exposed on this surface",
+           "location": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/03-password-reset.spec.ts",
+            "line": 15,
+            "column": 8
+           }
+          }
+         ],
+         "attachments": []
+        }
+       ],
+       "status": "skipped"
+      }
+     ],
+     "id": "c6b7f66455e565bcbb02-35d06fe7a49b3b029cc5",
+     "file": "preauth/03-password-reset.spec.ts",
+     "line": 9,
+     "column": 5
+    }
+   ]
+  },
+  {
+   "title": "preauth/04-public-links.spec.ts",
+   "file": "preauth/04-public-links.spec.ts",
+   "column": 0,
+   "line": 0,
+   "specs": [
+    {
+     "title": "header and footer links resolve",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [
+        {
+         "type": "skip",
+         "description": "no public allocations.com links on this surface",
+         "location": {
+          "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/04-public-links.spec.ts",
+          "line": 17,
+          "column": 8
+         }
+        }
+       ],
+       "expectedStatus": "skipped",
+       "projectId": "desktop-chromium",
+       "projectName": "desktop-chromium",
+       "results": [
+        {
+         "workerIndex": 7,
+         "parallelIndex": 0,
+         "status": "skipped",
+         "duration": 2191,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:55:38.932Z",
+         "annotations": [
+          {
+           "type": "skip",
+           "description": "no public allocations.com links on this surface",
+           "location": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/04-public-links.spec.ts",
+            "line": 17,
+            "column": 8
+           }
+          }
+         ],
+         "attachments": []
+        }
+       ],
+       "status": "skipped"
+      }
+     ],
+     "id": "cff46c6bb966121c630e-ac69ddc4e932bfe4c582",
+     "file": "preauth/04-public-links.spec.ts",
+     "line": 9,
+     "column": 5
+    },
+    {
+     "title": "header and footer links resolve",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [
+        {
+         "type": "skip",
+         "description": "no public allocations.com links on this surface",
+         "location": {
+          "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/04-public-links.spec.ts",
+          "line": 17,
+          "column": 8
+         }
+        }
+       ],
+       "expectedStatus": "skipped",
+       "projectId": "mobile-iphone",
+       "projectName": "mobile-iphone",
+       "results": [
+        {
+         "workerIndex": 14,
+         "parallelIndex": 0,
+         "status": "skipped",
+         "duration": 1116,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:56:22.308Z",
+         "annotations": [
+          {
+           "type": "skip",
+           "description": "no public allocations.com links on this surface",
+           "location": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/04-public-links.spec.ts",
+            "line": 17,
+            "column": 8
+           }
+          }
+         ],
+         "attachments": []
+        }
+       ],
+       "status": "skipped"
+      }
+     ],
+     "id": "cff46c6bb966121c630e-a0dd4409f013d52983ef",
+     "file": "preauth/04-public-links.spec.ts",
+     "line": 9,
+     "column": 5
+    }
+   ]
+  },
+  {
+   "title": "preauth/05-mobile-layout.spec.ts",
+   "file": "preauth/05-mobile-layout.spec.ts",
+   "column": 0,
+   "line": 0,
+   "specs": [
+    {
+     "title": "sign-in renders without overflow and controls stay tappable on mobile",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [
+        {
+         "type": "skip",
+         "description": "mobile-only check",
+         "location": {
+          "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/05-mobile-layout.spec.ts",
+          "line": 10,
+          "column": 8
+         }
+        }
+       ],
+       "expectedStatus": "skipped",
+       "projectId": "desktop-chromium",
+       "projectName": "desktop-chromium",
+       "results": [
+        {
+         "workerIndex": 7,
+         "parallelIndex": 0,
+         "status": "skipped",
+         "duration": 253,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:55:41.143Z",
+         "annotations": [
+          {
+           "type": "skip",
+           "description": "mobile-only check",
+           "location": {
+            "file": "/home/runner/work/allocations-qa-console/allocations-qa-console/tests/preauth/05-mobile-layout.spec.ts",
+            "line": 10,
+            "column": 8
+           }
+          }
+         ],
+         "attachments": []
+        }
+       ],
+       "status": "skipped"
+      }
+     ],
+     "id": "3686e640ce2d98e9a0fd-0807d590c410faf1f346",
+     "file": "preauth/05-mobile-layout.spec.ts",
+     "line": 9,
+     "column": 5
+    },
+    {
+     "title": "sign-in renders without overflow and controls stay tappable on mobile",
+     "ok": true,
+     "tags": [],
+     "tests": [
+      {
+       "timeout": 30000,
+       "annotations": [],
+       "expectedStatus": "passed",
+       "projectId": "mobile-iphone",
+       "projectName": "mobile-iphone",
+       "results": [
+        {
+         "workerIndex": 14,
+         "parallelIndex": 0,
+         "status": "passed",
+         "duration": 4249,
+         "errors": [],
+         "stdout": [],
+         "stderr": [],
+         "retry": 0,
+         "startTime": "2026-10-06T19:56:23.444Z",
+         "annotations": [],
+         "attachments": []
+        }
+       ],
+       "status": "expected"
+      }
+     ],
+     "id": "3686e640ce2d98e9a0fd-4784a8e7fd8e7a6f8f2b",
+     "file": "preauth/05-mobile-layout.spec.ts",
+     "line": 9,
+     "column": 5
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "stats": {
+  "startTime": "2026-10-06T19:55:06.083Z",
+  "duration": 94329.66100000001,
+  "expected": 2,
+  "skipped": 5,
+  "unexpected": 7,
+  "flaky": 0
+ }
+}

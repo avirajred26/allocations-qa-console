@@ -1,0 +1,8 @@
+{
+  "$comment": "Who is told about QA runs. github = login (matches the PR author); slack = Slack member ID (Profile > ⋮ > Copy member ID), used for @mentions; teams = Teams UPN/email, used for @mentions. Roles: qa is always notified; frontend / backend / platform are added when a failure of that cause appears.",
+  "consoleUrl": "https://aviraj-allocations-qa.vercel.app",
+  "notify": { "pre-merge": "always", "post-merge": "always" },
+  "stakeholders": [
+    { "name": "Aviraj Lall", "role": "qa", "github": "avirajred26", "slack": "", "teams": "" }
+  ]
+}
