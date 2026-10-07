@@ -12,11 +12,11 @@ test('sample groups preserve every existing fixture entry exactly once',()=>{
 });
 test('recorded CI detail totals match the actual report',()=>{
   expect(ci.tests).toHaveLength(14);
-  expect(ci.tests.filter(t=>t.status==='passed')).toHaveLength(2);
-  expect(ci.tests.filter(t=>t.status==='failed')).toHaveLength(7);
-  expect(ci.tests.filter(t=>t.status==='skipped')).toHaveLength(5);
+  expect(ci.tests.filter(t=>t.status==='passed')).toHaveLength(13);
+  expect(ci.tests.filter(t=>t.status==='failed')).toHaveLength(0);
+  expect(ci.tests.filter(t=>t.status==='skipped')).toHaveLength(1);
   const record=recordedExecutions.find(r=>r.source==='recorded-ci')!;
   expect(record.date).toBe(ci.startTime);
-  expect(record.counts).toEqual({pass:2,fail:7,flaky:0,skipped:5});
+  expect(record.counts).toEqual({pass:13,fail:0,flaky:0,skipped:1});
   expect(ci.tests.filter(t=>t.error).every(t=>(t.attachments as string[]).includes('trace'))).toBe(true);
 });

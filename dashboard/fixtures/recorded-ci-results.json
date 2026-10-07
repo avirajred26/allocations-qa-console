@@ -1,226 +1,191 @@
 {
-  "provenance": "Imported from results.json in GitHub Actions artifact playwright-report-manual-check-20261007-01",
-  "runId": "37522348772",
-  "startTime": "2026-10-06T19:55:06.083Z",
-  "durationMs": 94329.66100000001,
+  "provenance": "Imported from results.json in GitHub Actions artifact playwright-report-ci-corrected-01",
+  "runId": "37567120072",
+  "startTime": "2026-10-07T03:32:06.901Z",
+  "durationMs": 27100.031,
   "stats": {
-    "startTime": "2026-10-06T19:55:06.083Z",
-    "duration": 94329.66100000001,
-    "expected": 2,
-    "skipped": 5,
-    "unexpected": 7,
+    "startTime": "2026-10-07T03:32:06.901Z",
+    "duration": 27100.031,
+    "expected": 13,
+    "skipped": 1,
+    "unexpected": 0,
     "flaky": 0
   },
   "tests": [
     {
-      "id": "3b3221b594a0681b36b7-5cb7dab6a0ca1466be09-desktop-chromium",
-      "title": "page loads with Allocations branding and no runtime errors",
+      "id": "3b3221b594a0681b36b7-b20c7b6214b2e7d552e1-desktop-chromium",
+      "title": "sign-in renders with email + passkey options; anonymous auth probes return 401; no other runtime errors",
       "file": "preauth/01-landing.spec.ts",
       "device": "desktop-chromium",
-      "outcome": "unexpected",
-      "status": "failed",
-      "durationMs": 1073,
-      "retries": 1,
-      "error": "Error: unexpected runtime errors: Failed to load resource: the server responded with a status of 401 ()\n\nexpect(received).toHaveLength(expected)\n\nExpected length: 0\nReceived length: 1\nReceived array:  [\"Failed to load resource: the server responded with a status of 401 ()\"]",
-      "annotations": [],
-      "attachments": [
-        "screenshot",
-        "video",
-        "error-context",
-        "trace"
-      ]
-    },
-    {
-      "id": "3b3221b594a0681b36b7-5c8b5165ae93e227755c-mobile-iphone",
-      "title": "page loads with Allocations branding and no runtime errors",
-      "file": "preauth/01-landing.spec.ts",
-      "device": "mobile-iphone",
       "outcome": "expected",
       "status": "passed",
-      "durationMs": 12677,
+      "durationMs": 2119,
       "retries": 0,
       "error": "",
       "annotations": [],
       "attachments": []
     },
     {
-      "id": "3fdaa34e7dc1a8af3f24-3e792d917ef0025d060a-desktop-chromium",
-      "title": "exposes email and password fields with a submit control",
+      "id": "3b3221b594a0681b36b7-3171faed4f38f5ce98d0-mobile-iphone",
+      "title": "sign-in renders with email + passkey options; anonymous auth probes return 401; no other runtime errors",
+      "file": "preauth/01-landing.spec.ts",
+      "device": "mobile-iphone",
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 11908,
+      "retries": 0,
+      "error": "",
+      "annotations": [],
+      "attachments": []
+    },
+    {
+      "id": "3fdaa34e7dc1a8af3f24-840407fd431147602830-desktop-chromium",
+      "title": "exposes an email field, a Continue action and a passkey option; no password field",
       "file": "preauth/02-signin-form.spec.ts",
       "device": "desktop-chromium",
-      "outcome": "unexpected",
-      "status": "failed",
-      "durationMs": 9498,
-      "retries": 1,
-      "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 2580,
+      "retries": 0,
+      "error": "",
       "annotations": [],
-      "attachments": [
-        "screenshot",
-        "video",
-        "error-context",
-        "trace"
-      ]
+      "attachments": []
     },
     {
       "id": "3fdaa34e7dc1a8af3f24-bbe66ed4add385e426a5-desktop-chromium",
       "title": "empty submission triggers validation on click, and no mutating request is attempted",
       "file": "preauth/02-signin-form.spec.ts",
       "device": "desktop-chromium",
-      "outcome": "unexpected",
-      "status": "failed",
-      "durationMs": 11658,
-      "retries": 1,
-      "error": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
-      "annotations": [],
-      "attachments": [
-        "screenshot",
-        "video",
-        "error-context",
-        "trace"
-      ]
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 2108,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "finding",
+          "description": "PRE-002 validation error is not ARIA-linked to the email input (no aria-invalid / aria-describedby)"
+        }
+      ],
+      "attachments": []
     },
     {
       "id": "3fdaa34e7dc1a8af3f24-db2d6f249abaf489db78-desktop-chromium",
       "title": "malformed email is flagged when submitted, and no mutating request is attempted",
       "file": "preauth/02-signin-form.spec.ts",
       "device": "desktop-chromium",
-      "outcome": "unexpected",
-      "status": "failed",
-      "durationMs": 11703,
-      "retries": 1,
-      "error": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
-      "annotations": [],
-      "attachments": [
-        "screenshot",
-        "video",
-        "error-context",
-        "trace"
-      ]
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 2499,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "finding",
+          "description": "PRE-002 malformed-email error is not ARIA-linked to the input (no aria-invalid / aria-describedby)"
+        }
+      ],
+      "attachments": []
     },
     {
-      "id": "3fdaa34e7dc1a8af3f24-0689b49f892ccbe7c5c3-mobile-iphone",
-      "title": "exposes email and password fields with a submit control",
+      "id": "3fdaa34e7dc1a8af3f24-53e44a58dc4f61ecc55d-mobile-iphone",
+      "title": "exposes an email field, a Continue action and a passkey option; no password field",
       "file": "preauth/02-signin-form.spec.ts",
       "device": "mobile-iphone",
-      "outcome": "unexpected",
-      "status": "failed",
-      "durationMs": 9502,
-      "retries": 1,
-      "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\nExpected: visible\nTimeout: 8000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first() with timeout 8000ms\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 11953,
+      "retries": 0,
+      "error": "",
       "annotations": [],
-      "attachments": [
-        "screenshot",
-        "video",
-        "error-context",
-        "trace"
-      ]
+      "attachments": []
     },
     {
       "id": "3fdaa34e7dc1a8af3f24-8f2d3c54bbfcbdc085c0-mobile-iphone",
       "title": "empty submission triggers validation on click, and no mutating request is attempted",
       "file": "preauth/02-signin-form.spec.ts",
       "device": "mobile-iphone",
-      "outcome": "unexpected",
-      "status": "failed",
-      "durationMs": 11589,
-      "retries": 1,
-      "error": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
-      "annotations": [],
-      "attachments": [
-        "screenshot",
-        "video",
-        "error-context",
-        "trace"
-      ]
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 4573,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "finding",
+          "description": "PRE-002 validation error is not ARIA-linked to the email input (no aria-invalid / aria-describedby)"
+        }
+      ],
+      "attachments": []
     },
     {
       "id": "3fdaa34e7dc1a8af3f24-c0d2fa4283f034fbcaf3-mobile-iphone",
       "title": "malformed email is flagged when submitted, and no mutating request is attempted",
       "file": "preauth/02-signin-form.spec.ts",
       "device": "mobile-iphone",
-      "outcome": "unexpected",
-      "status": "failed",
-      "durationMs": 11528,
-      "retries": 1,
-      "error": "TimeoutError: locator.fill: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('textbox', { name: /email/i }).or(getByPlaceholder(/email/i)).or(locator('input[type=\"email\"]')).first()\n",
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 4302,
+      "retries": 0,
+      "error": "",
+      "annotations": [
+        {
+          "type": "finding",
+          "description": "PRE-002 malformed-email error is not ARIA-linked to the input (no aria-invalid / aria-describedby)"
+        }
+      ],
+      "attachments": []
+    },
+    {
+      "id": "cfeb260011ccd7631dca-d5b8fbcb28098b8e2091-desktop-chromium",
+      "title": "GET /api/auth/me without a session returns 401 and no user data",
+      "file": "preauth/03-anon-api-boundary.spec.ts",
+      "device": "desktop-chromium",
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 235,
+      "retries": 0,
+      "error": "",
       "annotations": [],
-      "attachments": [
-        "screenshot",
-        "video",
-        "error-context",
-        "trace"
-      ]
-    },
-    {
-      "id": "c6b7f66455e565bcbb02-7f50effb5cd112b47ab0-desktop-chromium",
-      "title": "forgot-password link leads to a reset form",
-      "file": "preauth/03-password-reset.spec.ts",
-      "device": "desktop-chromium",
-      "outcome": "skipped",
-      "status": "skipped",
-      "durationMs": 1018,
-      "retries": 0,
-      "error": "",
-      "annotations": [
-        {
-          "type": "skip",
-          "description": "no reset link exposed on this surface"
-        }
-      ],
       "attachments": []
     },
     {
-      "id": "c6b7f66455e565bcbb02-35d06fe7a49b3b029cc5-mobile-iphone",
-      "title": "forgot-password link leads to a reset form",
-      "file": "preauth/03-password-reset.spec.ts",
+      "id": "cfeb260011ccd7631dca-99d99920ed9442fa9703-mobile-iphone",
+      "title": "GET /api/auth/me without a session returns 401 and no user data",
+      "file": "preauth/03-anon-api-boundary.spec.ts",
       "device": "mobile-iphone",
-      "outcome": "skipped",
-      "status": "skipped",
-      "durationMs": 1167,
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 257,
       "retries": 0,
       "error": "",
-      "annotations": [
-        {
-          "type": "skip",
-          "description": "no reset link exposed on this surface"
-        }
-      ],
+      "annotations": [],
       "attachments": []
     },
     {
-      "id": "cff46c6bb966121c630e-ac69ddc4e932bfe4c582-desktop-chromium",
-      "title": "header and footer links resolve",
-      "file": "preauth/04-public-links.spec.ts",
+      "id": "879c873c80e9b3e3e0ee-bf5461a316b9ecdeb9a0-desktop-chromium",
+      "title": "sign-in document carries HSTS, nosniff, frame protection and a CSP",
+      "file": "preauth/04-security-headers.spec.ts",
       "device": "desktop-chromium",
-      "outcome": "skipped",
-      "status": "skipped",
-      "durationMs": 2191,
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 184,
       "retries": 0,
       "error": "",
-      "annotations": [
-        {
-          "type": "skip",
-          "description": "no public allocations.com links on this surface"
-        }
-      ],
+      "annotations": [],
       "attachments": []
     },
     {
-      "id": "cff46c6bb966121c630e-a0dd4409f013d52983ef-mobile-iphone",
-      "title": "header and footer links resolve",
-      "file": "preauth/04-public-links.spec.ts",
+      "id": "879c873c80e9b3e3e0ee-f767a7c22ec01df408e5-mobile-iphone",
+      "title": "sign-in document carries HSTS, nosniff, frame protection and a CSP",
+      "file": "preauth/04-security-headers.spec.ts",
       "device": "mobile-iphone",
-      "outcome": "skipped",
-      "status": "skipped",
-      "durationMs": 1116,
+      "outcome": "expected",
+      "status": "passed",
+      "durationMs": 235,
       "retries": 0,
       "error": "",
-      "annotations": [
-        {
-          "type": "skip",
-          "description": "no public allocations.com links on this surface"
-        }
-      ],
+      "annotations": [],
       "attachments": []
     },
     {
@@ -230,7 +195,7 @@
       "device": "desktop-chromium",
       "outcome": "skipped",
       "status": "skipped",
-      "durationMs": 253,
+      "durationMs": 251,
       "retries": 0,
       "error": "",
       "annotations": [
@@ -248,7 +213,7 @@
       "device": "mobile-iphone",
       "outcome": "expected",
       "status": "passed",
-      "durationMs": 4249,
+      "durationMs": 2387,
       "retries": 0,
       "error": "",
       "annotations": [],

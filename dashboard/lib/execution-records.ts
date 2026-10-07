@@ -22,7 +22,7 @@ export function sampleExecutionRecords():ExecutionRecord[]{
   return [...groups.values()].sort((a,b)=>b.date.localeCompare(a.date));
 }
 export const recordedExecutions:ExecutionRecord[]=[
-  {id:'ci-37522348772',title:'Pre-auth smoke · GitHub Actions',ref:CI_EVIDENCE.runRef,source:'recorded-ci',environment:'prod-public',device:'Desktop + mobile',status:'fail',date:ciReport.startTime,counts:{pass:CI_EVIDENCE.passed,fail:CI_EVIDENCE.failed,flaky:0,skipped:CI_EVIDENCE.skipped},note:CI_EVIDENCE.note,scenarioIds:[],url:CI_EVIDENCE.url},
+  {id:`ci-${ciReport.runId}`,title:'Pre-auth smoke · GitHub Actions',ref:CI_EVIDENCE.runRef,source:'recorded-ci',environment:'prod-public',device:'Desktop + mobile',status:CI_EVIDENCE.failed>0?'fail':'pass',date:ciReport.startTime,counts:{pass:CI_EVIDENCE.passed,fail:CI_EVIDENCE.failed,flaky:0,skipped:CI_EVIDENCE.skipped},note:CI_EVIDENCE.note,scenarioIds:[],url:CI_EVIDENCE.url},
   {id:'local-20261007',title:'Pre-auth smoke · local verification',ref:'Recorded local execution',source:'recorded-local',environment:'prod-public',device:'Desktop + mobile',status:LOCAL_EVIDENCE.failed>0?'fail':'pass',date:LOCAL_EVIDENCE.isoDate,counts:{pass:LOCAL_EVIDENCE.passed,fail:LOCAL_EVIDENCE.failed,flaky:0,skipped:LOCAL_EVIDENCE.skipped},note:LOCAL_EVIDENCE.findings.join(' '),scenarioIds:[]},
 ];
 export const SOURCE_LABEL:Record<ExecutionRecord['source'],string>={'recorded-ci':'RECORDED CI','recorded-local':'RECORDED LOCAL',fixture:'FIXTURE',mock:'MOCK'};

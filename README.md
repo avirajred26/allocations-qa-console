@@ -18,7 +18,7 @@ One product finding surfaced, recorded as a Playwright annotation (not a failure
 **PRE-002** — the sign-in validation message is plain text with no `aria-invalid` / `aria-describedby`
 on the input; assistive technology is not told the field is in error.
 
-Next: re-run `qa-run.yml` in GitHub Actions so the recorded CI result reflects the corrected harness.
+Re-run in GitHub Actions on 7 Oct as `ci-corrected-01` ([run 37567120072](https://github.com/avirajred26/allocations-qa-console/actions/runs/37567120072)): **13 passed, 0 failed, 1 by-design skip**. That report is the recorded CI result in the dashboard.
 
 ## Start the dashboard
 
@@ -49,7 +49,7 @@ Run only one server on port 3000. Stop the dev server before starting the produc
 - Light/dark theme switch; preference persists in localStorage.
 - Grouped navigation, breadcrumbs and workspace search (Cmd/Ctrl + K).
 - Searchable run table, source tabs, status filters, sorting and dedicated run investigation pages.
-- Actual recorded CI detail at `/runs/ci-37522348772`: 14 test cases, final-attempt durations, retries, failure messages, skip reasons and original artifact link.
+- Actual recorded CI detail at `/runs/ci-37567120072` (run_ref `ci-corrected-01`): 14 test cases, final-attempt durations, retries, failure messages, skip reasons and original artifact link.
 - Scenario library with device history, local triage editing, owner/priority/classification/ticket fields, quarantine and reset.
 - Harness coverage and connection-status explanations.
 - Trigger dialog and real server-side dispatch/status/quota implementation. The dialog shows missing setup and prevents dispatch when quota is unavailable.

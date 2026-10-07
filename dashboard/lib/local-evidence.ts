@@ -16,7 +16,7 @@ export const LOCAL_EVIDENCE = {
     'The one skip is SM-005 on the desktop project; it is a mobile-only check and runs under mobile-iphone, where it passes.',
   ],
   actions: [
-    'Re-run qa-run.yml in GitHub Actions so the CI record matches the corrected harness; the 6 Oct CI run below predates the fix.',
+    'Done 7 Oct: qa-run.yml re-run in GitHub Actions as ci-corrected-01 (13 passed, 0 failed, 1 by-design skip); the CI record below is that run.',
     'Raise PRE-002 with frontend as a P3 accessibility defect on the sign-in form.',
   ],
 } as const;
@@ -33,10 +33,10 @@ export const LOCAL_EVIDENCE_TOTAL = LOCAL_EVIDENCE.passed + LOCAL_EVIDENCE.faile
 
 /** Verified historical CI snapshot; never presented as a live or scenario-level result. */
 export const CI_EVIDENCE = {
-  dateLabel: '6 October 2026 (UTC)',
-  runRef: 'manual-check-20261007-01',
-  url: 'https://github.com/avirajred26/allocations-qa-console/actions/runs/37522348772',
-  passed: 2, failed: 7, skipped: 5,
-  artifact: 'playwright-report-manual-check-20261007-01',
-  note: 'Historical. The workflow ran and uploaded its report, and 7 of 14 checks failed because the harness assumed a password form and its guard blocked the startup refresh POST. The harness was corrected on 7 Oct (13/14 locally, 1 by-design skip); this CI record will be replaced by the next workflow run.',
+  dateLabel: '7 October 2026 (UTC)',
+  runRef: 'ci-corrected-01',
+  url: 'https://github.com/avirajred26/allocations-qa-console/actions/runs/37567120072',
+  passed: 13, failed: 0, skipped: 1,
+  artifact: 'playwright-report-ci-corrected-01',
+  note: 'Corrected harness run in GitHub Actions on 7 October 2026: 13 passed, 0 failed, 1 by-design skip (SM-005 is mobile-only and skips on desktop-chromium).',
 } as const;
