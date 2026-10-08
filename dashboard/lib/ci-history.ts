@@ -7,10 +7,10 @@ import type { CheckStats, HistoryRun, Phase, QaSummary } from '@/lib/qa-types';
 export { PHASE_LABEL } from '@/lib/qa-types';
 export type { CheckStats, HistoryRun, Phase, QaSummary, ReportFailure, ReportTest } from '@/lib/qa-types';
 
-const CACHE_PREFIX = 'ci:summary:v2:';
+const CACHE_PREFIX = 'ci:summary:v3:';
 const MISSING_TTL_SECONDS = 6 * 3600;
 /** Artifact downloads per request; the rest are filled in by later requests. */
-const MAX_DOWNLOADS = 3;
+const MAX_DOWNLOADS = 8;
 
 /** Accepts Playwright's results.json or the workflow's qa-summary.json — both carry `stats`. */
 export function parseStats(json: unknown): CheckStats | null {
@@ -43,7 +43,7 @@ export async function fetchSummary(runId: number): Promise<QaSummary | null> {
   } catch { return null; }
 }
 
-type Cached = { stats: CheckStats | null; phase: Phase | null; causes: Record<string, number> | null } | 'missing';
+type Cached = { stats: CheckStats | null; phase: Phase | null; causes: Record<string, number> | null; env?: string | null; suite?: string | null } | 'missing';
 
 function redisOrNull(): Redis | null {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
@@ -67,7 +67,7 @@ export async function loadHistory(limit = 30): Promise<HistoryRun[]> {
       downloads++;
       let failed = false;
       const summary = await fetchSummary(r.id).catch(() => { failed = true; return null; });
-      entry = summary ? { stats: parseStats(summary), phase: summary.phase ?? null, causes: summary.report?.byCategory ?? null } : 'missing';
+      entry = summary ? { stats: parseStats(summary), phase: summary.phase ?? null, causes: summary.report?.byCategory ?? null, env: summary.ctx?.envLabel ?? null, suite: (summary as { suite?: string | null }).suite ?? null } : 'missing';
       // A transient GitHub error is retried on the next request; only a definite result is cached.
       if (redis && !failed) {
         await (entry === 'missing'
@@ -81,7 +81,8 @@ export async function loadHistory(limit = 30): Promise<HistoryRun[]> {
     const end = Date.parse(r.updated_at);
     out.push({
       id: r.id,
-      ref: r.display_title.replace(/^QA run\s*/, '') || String(r.id),
+      // "QA run <ref>" / "QA pre-merge PR #n" / "QA post-merge <sha>" → short ref.
+      ref: r.display_title.replace(/^QA (run )?/, '').replace(/\b([0-9a-f]{7})[0-9a-f]{33}\b/, '$1') || String(r.id),
       event: r.event,
       phase: hit?.phase ?? phaseOf(r),
       status: r.status,
@@ -92,6 +93,8 @@ export async function loadHistory(limit = 30): Promise<HistoryRun[]> {
       durationSec: r.status === 'completed' && end > start ? Math.round((end - start) / 1000) : null,
       stats: hit?.stats ?? null,
       causes: hit?.causes ?? null,
+      env: hit?.env ?? null,
+      suite: hit?.suite ?? null,
     });
   }
   return out;
