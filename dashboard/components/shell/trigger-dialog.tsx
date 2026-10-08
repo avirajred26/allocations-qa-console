@@ -188,11 +188,11 @@ export function TriggerDialog({
               >
                 {ENVIRONMENTS.map((e) => (
                   <ToggleGroupItem key={e.id} value={e.id} disabled={submitting || !e.baseUrl} title={e.baseUrl ?? e.notes}>
-                    {e.label}{!e.baseUrl && <span className="ml-1 text-[10px] text-muted-foreground">· no URL</span>}
+                    {e.label}{!e.baseUrl ? <span className="ml-1 text-[10px] text-muted-foreground">· no URL</span> : e.aliasOf ? <span className="ml-1 text-[10px] text-muted-foreground">· demo</span> : null}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <FieldDescription>From qa-environments.json. Add a dev or staging URL there to enable it; nothing silently falls back to production.</FieldDescription>
+              <FieldDescription>{envInfo?.aliasOf ? `${envInfo.label} is a demo alias of production for this assignment: it runs against ${envInfo.baseUrl?.replace(/^https?:\/\//, '')} and every report says so.` : 'From qa-environments.json; nothing silently falls back to production.'}</FieldDescription>
             </FieldSet>
 
             <FieldSet>

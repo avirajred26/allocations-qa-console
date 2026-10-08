@@ -1,9 +1,26 @@
 {
-  "$comment": "Single source of truth for where QA runs. Read by the Playwright harness (playwright.config.ts via QA_ENV), the CI entrypoint (scripts/qa-env.mjs) and the console's Trigger run. An environment with a null baseUrl is listed but cannot be targeted. 'gates' says which environment each automated trigger uses.",
+  "$comment": "Single source of truth for where QA runs. Read by the Playwright harness (playwright.config.ts via QA_ENV), the CI entrypoint (scripts/qa-env.mjs) and the console's Trigger run. An environment with a null baseUrl is listed but cannot be targeted. 'gates' says which environment each automated trigger uses. 'aliasOf' marks an environment that, for this assignment, points at another environment's surface; reports and the console label it as a demo alias. Replace baseUrl and remove aliasOf when the real URL exists.",
   "environments": [
-    { "id": "dev", "label": "Dev", "baseUrl": null, "notes": "Development build. URL not provided for this assignment; add it here to enable." },
-    { "id": "staging", "label": "Staging", "baseUrl": null, "notes": "Pre-production. URL not provided for this assignment; add it here to enable." },
-    { "id": "prod", "label": "Production", "baseUrl": "https://dashboard.allocations.com", "notes": "Public, pre-auth surface only. Read-only checks with a fail-closed request guard." }
+    {
+      "id": "dev",
+      "label": "Dev",
+      "baseUrl": "https://dashboard.allocations.com",
+      "notes": "Assignment demo alias of the public production surface (no separate dev URL exists). Replace baseUrl and remove aliasOf to point at a real dev.",
+      "aliasOf": "prod"
+    },
+    {
+      "id": "staging",
+      "label": "Staging",
+      "baseUrl": "https://dashboard.allocations.com",
+      "notes": "Assignment demo alias of the public production surface (no separate staging URL exists). Replace baseUrl and remove aliasOf to point at a real staging.",
+      "aliasOf": "prod"
+    },
+    {
+      "id": "prod",
+      "label": "Production",
+      "baseUrl": "https://dashboard.allocations.com",
+      "notes": "Public, pre-auth surface only. Read-only checks with a fail-closed request guard."
+    }
   ],
   "gates": {
     "pre-merge": "staging",

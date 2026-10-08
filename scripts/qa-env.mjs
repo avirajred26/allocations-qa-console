@@ -32,14 +32,24 @@ export function resolveEnv(registry, request) {
   return { env, note: null };
 }
 
+/** Human note for an environment that is a demo alias of another one's surface. */
+export function aliasNote(registry, env) {
+  if (!env.aliasOf) return null;
+  const target = registry.environments.find((e) => e.id === env.aliasOf);
+  return `${env.label} is a demo alias of ${target?.label ?? env.aliasOf} (${env.baseUrl.replace(/^https?:\/\//, '')}) for this assignment; no separate ${env.label.toLowerCase()} URL exists.`;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const request = process.argv[2] ?? 'prod';
   try {
-    const { env, note } = resolveEnv(loadRegistry(), request);
+    const registry = loadRegistry();
+    const { env, note } = resolveEnv(registry, request);
+    const alias = aliasNote(registry, env);
     console.log(`QA_ENV=${env.id}`);
     console.log(`QA_ENV_LABEL=${env.label}`);
     console.log(`BASE_URL=${env.baseUrl}`);
-    if (note) console.log(`QA_ENV_NOTE=${note}`);
+    const notes = [note, alias].filter(Boolean).join(' ');
+    if (notes) console.log(`QA_ENV_NOTE=${notes}`);
     if (note) console.error(`::warning::${note}`);
   } catch (e) {
     console.error(`::error::${e.message}`);

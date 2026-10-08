@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadRegistry, resolveEnv } from './qa-env.mjs';
+import { aliasNote, loadRegistry, resolveEnv } from './qa-env.mjs';
 
 const reg = {
   environments: [
@@ -33,4 +33,17 @@ test('the shipped registry has a reachable production and only https URLs', () =
   assert.equal(resolveEnv(shipped, 'prod').env.baseUrl, 'https://dashboard.allocations.com');
   for (const e of shipped.environments) if (e.baseUrl) assert.match(e.baseUrl, /^https:\/\//);
   for (const g of Object.values(shipped.gates)) assert.ok(shipped.environments.some((e) => e.id === g), `gate target ${g} exists`);
+});
+
+test('demo aliases resolve and are always labelled as aliases', () => {
+  const shipped = loadRegistry();
+  for (const id of ['dev', 'staging']) {
+    const { env } = resolveEnv(shipped, id);
+    assert.equal(env.aliasOf, 'prod');
+    assert.match(aliasNote(shipped, env), new RegExp(`^${env.label} is a demo alias of Production`));
+  }
+  assert.equal(aliasNote(shipped, resolveEnv(shipped, 'prod').env), null);
+  // Gates now land on staging itself (labelled), not on the fallback.
+  assert.equal(resolveEnv(shipped, 'pre-merge').env.id, 'staging');
+  assert.equal(resolveEnv(shipped, 'pre-merge').note, null);
 });
