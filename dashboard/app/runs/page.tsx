@@ -19,7 +19,7 @@ type Row = ExecutionRecord & { href?: string; live?: string | null };
 // The CI snapshot row is one of the live CI runs below, so it is not listed twice.
 const staticRows: Row[] = [...recordedExecutions.filter(r=>r.source!=='recorded-ci'), ...sampleExecutionRecords()];
 const ENV_LABEL: Record<string,string> = { 'prod-public':'Production', staging:'Staging', dev:'Dev' };
-const DEVICE: Record<string,string> = { desktop:'Desktop Chromium', mobile:'Mobile iPhone', drill:'Desktop Chromium' };
+const DEVICE: Record<string,string> = { desktop:'Desktop Chromium', mobile:'Mobile iPhone', drill:'Desktop Chromium', both:'Android + iPhone sim', android:'Android emulator', ios:'iPhone simulator' };
 const getJson = async <T,>(url: string): Promise<T> => { const res = await fetch(url, { cache: 'no-store' }); if (!res.ok) throw new Error(String(res.status)); return res.json(); };
 /** One row per CI run, from the same /api/history feed as the Run history chart. */
 function ciRow(h: HistoryRun): Row {

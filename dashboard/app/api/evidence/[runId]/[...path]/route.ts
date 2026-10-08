@@ -6,9 +6,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-const TYPES: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webm: 'video/webm', zip: 'application/zip', md: 'text/markdown; charset=utf-8', txt: 'text/plain; charset=utf-8' };
+const TYPES: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webm: 'video/webm', mp4: 'video/mp4', zip: 'application/zip', md: 'text/markdown; charset=utf-8', txt: 'text/plain; charset=utf-8' };
 /** Only Playwright evidence inside the run's own report; no traversal, no other file types. */
-const SAFE_PATH = /^(test-results|playwright-report)\/[A-Za-z0-9._\-/]+\.(png|jpg|webm|zip|md|txt)$/;
+const SAFE_PATH = /^(test-results|playwright-report)\/[A-Za-z0-9._\-/]+\.(png|jpg|webm|mp4|zip|md|txt)$/;
 /** Vercel function responses are capped at ~4.5 MB. */
 const MAX_BYTES = 4_400_000;
 

@@ -161,7 +161,13 @@ export function junitReport(spec, suite = 'both') {
       evidence: { screenshot: pick('failure.png', '03-malformed-email-validation.png', '02-empty-email-validation.png', '01-signin-page.png'), video: pick('recording.mp4'), trace: null, log: pick('maestro-log.txt') },
     };
   });
-  return buildReportFromJUnit(platforms.filter((p) => p.required || p.xml));
+  const report = buildReportFromJUnit(platforms.filter((p) => p.required || p.xml));
+  // Evidence the flow saved when the app showed its session error before the retry.
+  for (const p of platforms) {
+    const dir = spec.split(',').find((x) => x.startsWith(`${p.project}=`))?.split('=')[1]?.replace(/\/[^/]*$/, '');
+    if (dir && existsSync(`${dir}/00-session-error.png`)) report.findings.push(`MOB-001 (${p.project}): "Unable to load your session" on first load in the mobile browser; recovered after Retry.`);
+  }
+  return report;
 }
 
 /* ---------- CI context ---------- */

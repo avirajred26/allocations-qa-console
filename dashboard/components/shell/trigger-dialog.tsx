@@ -22,7 +22,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useRuns } from '@/components/providers/runs-provider';
 import { QUOTA_KEY, type QuotaData, type TriggerBlock } from '@/hooks/use-quota';
-import { RUN_REF_PATTERN, type Scope, type Suite, type Workflow } from '@/lib/run-types';
+import { RUN_REF_PATTERN, type Platform, type Scope, type Suite, type Workflow } from '@/lib/run-types';
 import { ENVIRONMENTS } from '@/lib/environments';
 
 const SUITE_OPTIONS: { value: Suite; label: string }[] = [
@@ -34,6 +34,7 @@ const SUITE_OPTIONS: { value: Suite; label: string }[] = [
 
 const WORKFLOW_OPTIONS: { value: Workflow; label: string; hint: string }[] = [
   { value: 'qa-run.yml', label: 'qa-run.yml', hint: 'Manual run: pick the suite and scope below.' },
+  { value: 'qa-mobile.yml', label: 'qa-mobile.yml', hint: '' },
   { value: 'qa-regression.yml', label: 'qa-regression.yml', hint: 'Entire suite, every spec old and new, desktop + iPhone, each check 3×. Takes a few minutes.' },
 ];
 
@@ -80,6 +81,7 @@ export function TriggerDialog({
   const envInfo = ENVIRONMENTS.find((e) => e.id === environment);
   const [suite, setSuite] = useState<Suite>('all');
   const [scope, setScope] = useState<Scope>('full');
+  const [platform, setPlatform] = useState<Platform>('both');
   const [remember, setRemember] = useState(true);
   // HttpOnly session cookie set by /api/trigger after one valid key; the key itself is never stored.
   const { data: session } = useSWR<Session>(open ? SESSION_KEY : null, getSession, { revalidateOnFocus: false });
@@ -111,7 +113,7 @@ export function TriggerDialog({
       const res = await fetch('/api/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ demoKey: key || undefined, remember, environment, workflow, suite: workflow === 'qa-run.yml' ? suite : 'all', scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' }),
+        body: JSON.stringify({ demoKey: key || undefined, remember, environment, workflow, platform, suite: workflow === 'qa-run.yml' ? suite : 'all', scope: workflow === 'qa-run.yml' && suite !== 'drill' ? scope : 'full' }),
         cache: 'no-store',
       });
       const body: unknown = await res.json().catch(() => null);
@@ -213,6 +215,27 @@ export function TriggerDialog({
                 ))}
               </ToggleGroup>
             </FieldSet>
+
+            {workflow === 'qa-mobile.yml' && (
+              <FieldSet>
+                <FieldLegend variant="label">Platform</FieldLegend>
+                <ToggleGroup
+                  variant="outline"
+                  value={[platform]}
+                  onValueChange={(v: string[]) => {
+                    const next = v[0] as Platform | undefined;
+                    if (next) setPlatform(next);
+                  }}
+                  aria-label="Platform"
+                >
+                  {([['both', 'Android + iOS'], ['android', 'Android'], ['ios', 'iOS']] as const).map(([value, label]) => (
+                    <ToggleGroupItem key={value} value={value} disabled={submitting}>
+                      {label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </FieldSet>
+            )}
 
             {workflow === 'qa-run.yml' && (
               <FieldSet>

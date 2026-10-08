@@ -46,7 +46,7 @@ function sanitizeStored(value: unknown): SessionRun[] {
       {
         run_ref: x.run_ref,
         suite: x.suite as Suite,
-        workflow: x.workflow === 'qa-run.yml' || x.workflow === 'qa-regression.yml' ? x.workflow : undefined,
+        workflow: x.workflow === 'qa-run.yml' || x.workflow === 'qa-regression.yml' || x.workflow === 'qa-mobile.yml' ? x.workflow : undefined,
         scope: x.scope === 'full' || x.scope === 'api' || x.scope === 'ui' ? x.scope : undefined,
         environment: typeof x.environment === 'string' && /^[a-z0-9-]{2,20}$/.test(x.environment) ? x.environment : undefined,
         dispatch: x.dispatch,

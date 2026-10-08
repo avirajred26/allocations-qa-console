@@ -3,9 +3,20 @@
 # (SM-002) proved are rejected client-side, so no request reaches Allocations.
 appId: ${APP_ID}
 ---
+# The app sometimes shows "Unable to load your session" on first load in a mobile browser.
+# Keep evidence of it, then retry once the way a user would; a second failure fails the check.
+- extendedWaitUntil:
+    visible: "Continue|Unable to load your session.*"
+    timeout: 45000
+- runFlow:
+    when:
+      visible: "Unable to load your session.*"
+    commands:
+      - takeScreenshot: ${OUT}/00-session-error
+      - tapOn: "Retry"
 - extendedWaitUntil:
     visible: "Continue"
-    timeout: 45000
+    timeout: 30000
 - assertVisible: "Sign in with a passkey"
 - takeScreenshot: ${OUT}/01-signin-page
 

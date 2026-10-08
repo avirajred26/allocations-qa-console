@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BellIcon, BoxesIcon, ServerIcon, CalendarClockIcon, ClipboardCheckIcon, GaugeIcon, GitMergeIcon, GitPullRequestIcon, HandIcon, RouteIcon, ShieldCheckIcon, SirenIcon, UsersIcon } from 'lucide-react';
+import { BellIcon, BoxesIcon, ServerIcon, SmartphoneIcon, CalendarClockIcon, ClipboardCheckIcon, GaugeIcon, GitMergeIcon, GitPullRequestIcon, HandIcon, RouteIcon, ShieldCheckIcon, SirenIcon, UsersIcon } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { REPO_URL, V0_URL } from '@/lib/fixture';
 import { ENVIRONMENTS, GATES } from '@/lib/environments';
@@ -111,7 +111,7 @@ export default function ProcessPage() {
       />
 
       <nav aria-label="On this page" className="flex flex-wrap gap-2 text-xs">
-        {[['pipeline', 'Pipeline'], ['triggers', 'Triggers & scope'], ['environments', 'Environments'], ['cicd', 'CI/CD'], ['checks', 'Test inventory'], ['gates', 'Quality gates'], ['triage', 'Failure triage'], ['severity', 'Severity'], ['reporting', 'Reporting'], ['safety', 'Safety'], ['roles', 'Roles']].map(([id, label]) => (
+        {[['pipeline', 'Pipeline'], ['triggers', 'Triggers & scope'], ['environments', 'Environments'], ['cicd', 'CI/CD'], ['mobile', 'Mobile'], ['checks', 'Test inventory'], ['gates', 'Quality gates'], ['triage', 'Failure triage'], ['severity', 'Severity'], ['reporting', 'Reporting'], ['safety', 'Safety'], ['roles', 'Roles']].map(([id, label]) => (
           <a key={id} href={`#${id}`} className="rounded-md border bg-card px-2.5 py-1 text-muted-foreground transition hover:border-primary/40 hover:text-foreground">{label}</a>
         ))}
       </nav>
@@ -149,9 +149,34 @@ export default function ProcessPage() {
         </div>
       </Section>
 
+      <Section id="mobile" icon={SmartphoneIcon} title="Mobile (Android + iOS)" intro="Assignment demo: there is no Allocations app build, so the mobile checks open the public sign-in page in the phone's own browser.">
+        <div className="space-y-6">
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Running now</h3>
+            <div className="-mx-5 overflow-x-auto"><table className="qa-table min-w-[640px]"><thead><tr><th>Check</th><th>Device</th><th>When</th><th>Evidence</th></tr></thead><tbody>
+              {[['MOB-A01', 'Chrome on an Android emulator (Pixel 6, API 34)'], ['MOB-I01', 'Safari on an iPhone simulator (macOS runner)']].map(([id, d]) => <tr key={id}><td className="whitespace-nowrap font-mono text-xs text-primary">{id}</td><td className="text-xs">{d}</td><td className="text-xs text-muted-foreground">PRs that change mobile/, Mondays 04:00 UTC, Trigger run → qa-mobile.yml</td><td className="text-xs text-muted-foreground">Screenshots, screen recording, Maestro log</td></tr>)}
+            </tbody></table></div>
+            <p className="mt-3 text-[11px] leading-5 text-muted-foreground">Each flow loads the sign-in page, then tries an empty and a malformed email, the same inputs SM-002 shows are rejected in the browser, so nothing is sent to Allocations. Tool: Maestro.</p>
+          </div>
+          <div>
+            <h3 className="mb-2 text-sm font-medium">With a real app build</h3>
+            <div className="-mx-5 overflow-x-auto"><table className="qa-table min-w-[640px]"><thead><tr><th>Stage</th><th>What runs</th><th>Gate</th></tr></thead><tbody>
+              {[
+                ['PR', 'Build both apps, unit tests (XCTest / JUnit), 5–10 key flows on 1 simulator + 1 emulator', 'Blocks merge if red'],
+                ['Merge', 'Signed staging build, full UI suite, upload to TestFlight and Play internal track', 'Beta ready'],
+                ['Weekly', 'Full regression on real devices (BrowserStack / Firebase Test Lab), iOS 17–18, Android 12–15', 'Opens triage'],
+                ['Release', 'Regression green, manual pass, accessibility (VoiceOver / TalkBack), crash-free ≥ 99.5% on beta', 'Staged rollout 10% → 100%'],
+              ].map(([st, w, g]) => <tr key={st}><td className="text-xs font-medium">{st}</td><td className="text-xs text-muted-foreground">{w}</td><td className="text-xs">{g}</td></tr>)}
+            </tbody></table></div>
+            <p className="mt-3 text-[11px] leading-5 text-muted-foreground">Same report and triage as web. The flows swap opening the browser for installing the .apk / .ipa; Fastlane handles builds and signing.</p>
+          </div>
+        </div>
+      </Section>
+
       <Section id="checks" icon={ClipboardCheckIcon} title="Test inventory" intro="Each check runs on desktop Chrome and iPhone 13 unless noted.">
         <div className="-m-5 overflow-x-auto"><table className="qa-table min-w-[720px]"><thead><tr><th>ID</th><th>Level</th><th>What it proves</th><th>Gate</th></tr></thead><tbody>
           {CHECKS.map(([id, level, what]) => <tr key={id}><td className="whitespace-nowrap font-mono text-xs text-primary">{id}</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">{level}</span></td><td className="text-xs leading-5">{what}</td><td className="text-xs text-muted-foreground">{level === 'API' ? 'Pre-merge · post-merge · regression' : 'Post-merge · regression'}</td></tr>)}
+          <tr><td className="whitespace-nowrap font-mono text-xs text-primary">MOB-A01 / I01</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">MOBILE</span></td><td className="text-xs leading-5">Sign-in page and email validation in Chrome on Android and Safari on iOS (emulator / simulator)</td><td className="text-xs text-muted-foreground">Mobile · weekly · manual</td></tr>
           <tr><td className="font-mono text-xs text-warning">DRILL</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">UI + API</span></td><td className="text-xs leading-5">Two deliberate failures that exercise the reporting path end to end; never part of a gate</td><td className="text-xs text-muted-foreground">Manual only</td></tr>
         </tbody></table></div>
       </Section>
