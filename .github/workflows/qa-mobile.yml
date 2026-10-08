@@ -1,0 +1,183 @@
+name: QA mobile
+# Sign-in checks on real mobile OSes: Chrome on an Android emulator and Safari on an iPhone
+# simulator, driven by Maestro. Same report as the web runs (PR comment, job summary, console).
+# When an Allocations app build exists, the flows swap `openLink` for installing the .apk / .ipa.
+run-name: "${{ inputs.run_ref && format('QA run {0}', inputs.run_ref) || format('QA mobile {0}', github.event_name == 'pull_request' && format('PR #{0}', github.event.pull_request.number) || 'weekly') }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_ref:
+        description: Correlation ref from the QA console (optional; 8–40 chars)
+        required: false
+        type: string
+      platform:
+        description: Which devices
+        required: false
+        default: both
+        type: choice
+        options: [both, android, ios]
+      environment:
+        description: Environment from dashboard/qa-environments.json
+        required: false
+        default: prod
+        type: choice
+        options: [prod, staging, dev]
+  pull_request:
+    branches: [main]
+    paths: ["mobile/**", ".github/workflows/qa-mobile.yml"]
+  schedule:
+    - cron: "0 4 * * 1"   # Mondays 04:00 UTC, after the web regression
+
+concurrency:
+  group: qa-mobile-${{ inputs.run_ref || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+env:
+  CI: "true"
+  MAESTRO_VERSION: "1.39.13"
+  PLATFORM: ${{ inputs.platform || 'both' }}
+  RUN_REF: ${{ inputs.run_ref || format('mobile-{0}', github.run_id) }}
+
+jobs:
+  android:
+    name: Android · Chrome on emulator (API 34)
+    if: ${{ (inputs.platform || 'both') != 'ios' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Resolve environment
+        run: node scripts/qa-env.mjs "${{ inputs.environment || 'prod' }}" >> "$GITHUB_ENV"
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run flows on the emulator
+        id: run
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: ./mobile/run-android.sh
+      - name: Upload Android evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-android-${{ github.run_id }}
+          path: test-results/mobile/android
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Fail the job when flows failed
+        if: steps.run.outcome == 'failure'
+        run: exit 1
+
+  ios:
+    name: iOS · Safari on iPhone simulator
+    if: ${{ (inputs.platform || 'both') != 'android' }}
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Resolve environment
+        run: node scripts/qa-env.mjs "${{ inputs.environment || 'prod' }}" >> "$GITHUB_ENV"
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Run flows on the simulator
+        id: run
+        continue-on-error: true
+        run: ./mobile/run-ios.sh
+      - name: Upload iOS evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-ios-${{ github.run_id }}
+          path: test-results/mobile/ios
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Fail the job when flows failed
+        if: steps.run.outcome == 'failure'
+        run: exit 1
+
+  report:
+    name: Mobile report
+    needs: [android, ios]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    env:
+      QA_PHASE: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Resolve environment
+        run: node scripts/qa-env.mjs "${{ inputs.environment || 'prod' }}" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mobile-*-${{ github.run_id }}
+          path: dl
+      - name: Arrange evidence
+        run: |
+          mkdir -p test-results/mobile
+          for p in android ios; do [ -d "dl/mobile-$p-${{ github.run_id }}" ] && cp -R "dl/mobile-$p-${{ github.run_id }}" "test-results/mobile/$p"; done
+          find test-results/mobile -maxdepth 2 -name junit.xml
+      - name: Report (PR comment, summary, Slack/Teams if configured)
+        env:
+          QA_JUNIT: android=test-results/mobile/android/junit.xml,ios=test-results/mobile/ios/junit.xml
+          GITHUB_TOKEN: ${{ github.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          CONSOLE_URL: ${{ vars.QA_CONSOLE_URL }}
+          SUITE: ${{ env.PLATFORM }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/qa-notify.mjs
+      # Same artifact prefix as the web runs, so the console's evidence route serves these files.
+      - name: Upload combined evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ env.RUN_REF }}
+          # Two paths keep the repo root as artifact root, so entries are test-results/mobile/...
+          path: |
+            test-results
+            qa-report.md
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-summary-${{ env.RUN_REF }}
+          path: qa-summary.json
+          retention-days: 90
+          if-no-files-found: ignore
+      - name: Fail when a platform failed
+        if: ${{ needs.android.result == 'failure' || needs.ios.result == 'failure' }}
+        run: exit 1

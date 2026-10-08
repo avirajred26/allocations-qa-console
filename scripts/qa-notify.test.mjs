@@ -82,3 +82,18 @@ test('CI context is detected for GitHub, Azure DevOps, GitLab and Jenkins; QA_* 
   const azLinks = links({ ...az, consoleUrl: 'https://console.example' }, buildReport(failing).failures[0]);
   assert.equal(azLinks.screenshot, null, 'no console evidence links outside GitHub');
 });
+
+test('mobile JUnit (Maestro) builds the same report: totals, per-platform failures, UI cause, evidence', async () => {
+  const { buildReportFromJUnit } = await import('./qa-notify.mjs');
+  const android = `<?xml version="1.0"?><testsuites><testsuite name="Test Suite" tests="1" failures="0"><testcase id="signin" name="MOB-A01 sign-in page in Chrome on Android" classname="signin" time="21.4" status="SUCCESS"/></testsuite></testsuites>`;
+  const ios = `<testsuites><testsuite tests="1" failures="1"><testcase name="MOB-I01 sign-in page in Safari on iOS" time="30.0"><failure>Assertion is false: "Sign in with a passkey" is visible</failure></testcase></testsuite></testsuites>`;
+  const ev = (p) => ({ screenshot: `test-results/mobile/${p}/failure.png`, video: `test-results/mobile/${p}/recording.mp4`, trace: null, log: `test-results/mobile/${p}/maestro-log.txt` });
+  const r = buildReportFromJUnit([{ project: 'android', xml: android, evidence: ev('android') }, { project: 'ios', xml: ios, evidence: ev('ios') }]);
+  assert.deepEqual([r.stats.total, r.stats.passed, r.stats.failed, r.stats.durationMs], [2, 1, 1, 51400]);
+  assert.equal(r.failures[0].project, 'ios');
+  assert.equal(r.failures[0].category, 'ui');
+  assert.match(r.failures[0].reason, /Sign in with a passkey/);
+  assert.equal(r.failures[0].evidence.video, 'test-results/mobile/ios/recording.mp4');
+  const missing = buildReportFromJUnit([{ project: 'android', xml: null, required: true }]);
+  assert.match(missing.globalErrors[0], /android: no results/);
+});

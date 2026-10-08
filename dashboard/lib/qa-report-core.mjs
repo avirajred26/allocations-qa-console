@@ -25,7 +25,7 @@ export function classifyFailure({ file = '', message = '' }) {
   // An HTTP status compared in an assertion about an endpoint or a status (e.g. Expected: 200, Received: 401).
   if (/(\/api\/|\bstatus\b)[\s\S]{0,300}\b(Expected|Received):\s*[1-5]\d\d\b/i.test(m)) return 'backend';
   if (/status (code )?(of )?[45]\d\d\b|Failed to load resource|toBeOK|response\.(status|ok)|apiRequestContext|mutating request|\b5\d\d\b.*(error|status)/i.test(m)) return 'backend';
-  if (/locator|getBy(Role|Text|Label|Placeholder|TestId)|toBe(Visible|Hidden|Enabled|Disabled|InViewport|Checked)|toHave(Text|Value|Count|Attribute|Screenshot|Class|CSS)|element is not|overflow|tap target/i.test(m)) return 'ui';
+  if (/Element not found|Assertion is false|is visible|locator|getBy(Role|Text|Label|Placeholder|TestId)|toBe(Visible|Hidden|Enabled|Disabled|InViewport|Checked)|toHave(Text|Value|Count|Attribute|Screenshot|Class|CSS)|element is not|overflow|tap target/i.test(m)) return 'ui';
   if (/Test timeout of \d+ms exceeded|Timeout \d+ms exceeded/i.test(m)) return 'timeout';
   return 'test';
 }
@@ -102,3 +102,60 @@ export function buildReport(results) {
   return { stats, tests: all, failures, flaky, byCategory, findings, slowest, globalErrors: (results.errors ?? []).map((e) => firstLine(e.message)) };
 }
 
+
+const xmlAttr = (tag, name) => {
+  const m = new RegExp(`\\b${name}="([^"]*)"`).exec(tag);
+  return m ? m[1].replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') : null;
+};
+const xmlText = (s) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim();
+
+/**
+ * Same report shape from JUnit XML (Maestro, or any mobile/native runner). One entry per
+ * platform: { project: 'android', xml, file, evidence: { screenshot, video, trace, log } }.
+ */
+export function buildReportFromJUnit(platforms) {
+  const tests = [];
+  for (const p of platforms) {
+    if (!p.xml) continue;
+    for (const m of p.xml.matchAll(/<testcase\b([^>]*?)(\/>|>([\s\S]*?)<\/testcase>)/g)) {
+      const attrs = m[1];
+      const body = m[3] ?? '';
+      const fail = /<(failure|error)\b([^>]*)>([\s\S]*?)<\/\1>|<(failure|error)\b([^>]*)\/>/.exec(body);
+      const skipped = /<skipped\b/.test(body);
+      const message = fail ? xmlText(fail[3] ?? '') || xmlAttr(fail[2] ?? fail[5] ?? '', 'message') || 'Failed' : '';
+      tests.push({
+        title: xmlAttr(attrs, 'name') ?? xmlAttr(attrs, 'id') ?? 'flow',
+        file: p.file ?? `mobile/flows/${p.project}`,
+        line: 0,
+        project: p.project,
+        outcome: fail ? 'unexpected' : skipped ? 'skipped' : 'expected',
+        status: fail ? 'failed' : skipped ? 'skipped' : 'passed',
+        durationMs: Math.round(Number(xmlAttr(attrs, 'time') ?? 0) * 1000),
+        retries: 0,
+        message,
+        evidence: p.evidence ?? { screenshot: null, video: null, trace: null, log: null },
+      });
+    }
+  }
+  const count = (o) => tests.filter((t) => t.outcome === o).length;
+  const stats = { total: tests.length, passed: count('expected'), failed: count('unexpected'), flaky: 0, skipped: count('skipped'), durationMs: tests.reduce((n, t) => n + t.durationMs, 0), startTime: null };
+  const failures = tests.filter((t) => t.outcome === 'unexpected').map((t) => ({
+    title: t.title, file: t.file, line: t.line, project: t.project, retries: 0, durationMs: t.durationMs,
+    category: classifyFailure({ file: t.file, message: t.message }), reason: firstLine(t.message),
+    detail: clean(t.message).split('\n').slice(0, 14).join('\n').slice(0, 1500), evidence: t.evidence,
+  }));
+  const byCategory = {};
+  for (const f of failures) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
+  return {
+    stats,
+    tests: tests.map(({ message: _m, evidence: _e, ...t }) => ({ ...t, annotations: [] })),
+    failures, flaky: [], byCategory, findings: [],
+    slowest: [...tests].sort((a, b) => b.durationMs - a.durationMs).slice(0, 3).map((t) => ({ title: t.title, project: t.project, durationMs: t.durationMs })),
+    globalErrors: platforms.filter((p) => !p.xml && p.required).map((p) => `${p.project}: no results (the device job did not finish; see its log).`),
+  };
+}
+
+/** Playwright-style raw stats for qa-summary.json, so history parsing stays the same. */
+export function rawStats(report) {
+  return { expected: report.stats.passed, unexpected: report.stats.failed, flaky: report.stats.flaky, skipped: report.stats.skipped, duration: report.stats.durationMs, startTime: report.stats.startTime };
+}

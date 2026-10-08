@@ -20,7 +20,8 @@ QA assignment for [dashboard.allocations.com](https://dashboard.allocations.com)
 | Merged to `main` | `qa-pr.yml` | UI + API |
 | Mondays 03:00 UTC | `qa-regression.yml` | Whole suite, each check 3× |
 | Every 6 hours | `qa-run.yml` | Whole suite |
-| Trigger run (console) | `qa-run.yml` / `qa-regression.yml` | You pick environment, suite and scope; "Failure drill" runs two tests that fail on purpose |
+| PRs changing `mobile/`, Mondays 04:00 UTC | `qa-mobile.yml` | Sign-in checks in Chrome on an Android emulator and Safari on an iPhone simulator (Maestro) |
+| Trigger run (console) | `qa-run.yml` / `qa-regression.yml` / `qa-mobile.yml` | You pick environment, suite and scope; "Failure drill" runs two tests that fail on purpose |
 
 Each run posts a report as a PR comment, in the job summary and in the console. Slack and Teams are optional (`SLACK_WEBHOOK_URL`, `TEAMS_WEBHOOK_URL` secrets).
 
@@ -35,7 +36,7 @@ Each run posts a report as a PR comment, in the job summary and in the console. 
 - **Real:** pre-auth test results, run history, run reports and evidence (from GitHub Actions), live environment checks.
 - **Sample (marked FIXTURE / MOCK):** scenario history, and logged-in flows like SPV formation, KYC, capital calls and distributions, because they need Allocations accounts.
 
-One real finding: **PRE-002**, the sign-in error message isn't linked to the email field (`aria-invalid` / `aria-describedby` missing), so screen readers don't announce it.
+Findings: **MOB-001**, Chrome on the Android emulator can't load the sign-in page ("Unable to load your session"); iOS Safari and Android emulation in Playwright are fine, so it's likely the emulator's older Chrome, to confirm on a real phone. **PRE-002**, the sign-in error message isn't linked to the email field (`aria-invalid` / `aria-describedby` missing), so screen readers don't announce it.
 
 ## Run it locally
 

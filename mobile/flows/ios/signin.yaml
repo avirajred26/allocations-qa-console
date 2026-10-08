@@ -1,0 +1,12 @@
+# MOB-I01 · iOS · Safari on an iPhone simulator opens the sign-in page and validates email.
+appId: com.apple.mobilesafari
+name: "MOB-I01 sign-in page in Safari on iOS"
+---
+- startRecording: ${OUT}/recording
+- launchApp
+- openLink: ${BASE_URL}
+- runFlow:
+    file: ../common/signin-checks.yaml
+    env:
+      APP_ID: com.apple.mobilesafari
+- stopRecording

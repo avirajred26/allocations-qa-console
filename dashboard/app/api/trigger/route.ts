@@ -2,7 +2,7 @@ import { NextResponse, after } from 'next/server';
 import { verifyDemoKey, requestId, issueSession, verifySession, readCookie, sessionCookieHeader, SESSION_COOKIE, SESSION_TTL_SECONDS, keyRequired, visitorId, sameOrigin } from '@/lib/auth';
 import { acquireTriggerSlot, releaseTriggerSlot, cancelAdmission, keysFor, cooldownSeconds, DAILY_LIMIT, VISITOR_DAILY_LIMIT, visitorKey, visitorUsed, chargeVisitor } from '@/lib/redis';
 import { isTargetable } from '@/lib/environments';
-import { dispatchRun, newRunRef, DISPATCHABLE, type DispatchWorkflow, type Scope, type Suite } from '@/lib/github';
+import { dispatchRun, newRunRef, DISPATCHABLE, type DispatchWorkflow, type Platform, type Scope, type Suite } from '@/lib/github';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
   const suite: Suite = SUITES.includes(body?.suite) ? body.suite : 'all';
   const workflow: DispatchWorkflow = DISPATCHABLE.includes(body?.workflow) ? body.workflow : 'qa-run.yml';
   const scope: Scope = SCOPES.includes(body?.scope) ? body.scope : 'full';
+  const platform: Platform = ['both', 'android', 'ios'].includes(body?.platform) ? body.platform : 'both';
   const environment = body?.environment ?? 'prod';
   // Only environments with a URL in qa-environments.json; checked before auth so nothing is consumed.
   if (!isTargetable(environment)) {
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
 
   // 4. Dispatch. Refund only on a definitive rejection.
   const runRef = newRunRef();
-  const outcome = await dispatchRun(runRef, suite, { workflow, scope, environment });
+  const outcome = await dispatchRun(runRef, suite, { workflow, scope, environment, platform });
 
   if (outcome === 'rejected') {
     console.error(`[trigger ${rid}] dispatch=rejected ref=${runRef}`);

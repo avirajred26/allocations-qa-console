@@ -1,0 +1,20 @@
+# MOB-A01 · Android · Chrome on an emulator opens the sign-in page and validates email.
+appId: com.android.chrome
+name: "MOB-A01 sign-in page in Chrome on Android"
+---
+- startRecording: ${OUT}/recording
+- launchApp:
+    clearState: true
+# First-run screens differ by Chrome version; each step is optional.
+- tapOn: { text: "Accept & continue", optional: true }
+- tapOn: { text: "Use without an account", optional: true }
+- tapOn: { text: "No thanks", optional: true }
+- tapOn: { text: "No, thanks", optional: true }
+- openLink:
+    link: ${BASE_URL}
+    browser: true
+- runFlow:
+    file: ../common/signin-checks.yaml
+    env:
+      APP_ID: com.android.chrome
+- stopRecording

@@ -2,7 +2,7 @@
 
 export type CheckStats = { passed: number; failed: number; flaky: number; skipped: number };
 
-export type Phase = 'pre-merge' | 'post-merge' | 'regression' | 'manual' | 'drill' | 'health';
+export type Phase = 'pre-merge' | 'post-merge' | 'regression' | 'manual' | 'drill' | 'health' | 'mobile';
 
 export const PHASE_LABEL: Record<Phase, string> = {
   'pre-merge': 'Pre-merge · API',
@@ -11,6 +11,7 @@ export const PHASE_LABEL: Record<Phase, string> = {
   manual: 'Manual',
   drill: 'Failure drill',
   health: 'Health check',
+  mobile: 'Mobile · Android + iOS',
 };
 
 export type HistoryRun = {

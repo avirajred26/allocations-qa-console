@@ -1,5 +1,6 @@
 export type Suite = 'all' | 'desktop' | 'mobile' | 'drill';
-export type Workflow = 'qa-run.yml' | 'qa-regression.yml';
+export type Workflow = 'qa-run.yml' | 'qa-regression.yml' | 'qa-mobile.yml';
+export type Platform = 'both' | 'android' | 'ios';
 export type Scope = 'full' | 'api' | 'ui';
 export type Dispatch = 'accepted' | 'uncertain';
 export type RunConclusion = 'success' | 'failure' | 'cancelled' | 'skipped' | 'timed_out' | 'neutral' | null;

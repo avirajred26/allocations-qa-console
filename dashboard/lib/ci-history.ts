@@ -25,6 +25,7 @@ export function parseStats(json: unknown): CheckStats | null {
 export function phaseOf(run: Pick<WorkflowRun, 'path' | 'event'>): Phase {
   if (run.path.endsWith('qa-pr.yml')) return run.event === 'pull_request' ? 'pre-merge' : 'post-merge';
   if (run.path.endsWith('qa-regression.yml')) return 'regression';
+  if (run.path.endsWith('qa-mobile.yml')) return 'mobile';
   return run.event === 'schedule' ? 'health' : 'manual';
 }
 

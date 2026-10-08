@@ -18,3 +18,5 @@ export type BuiltReport = {
   globalErrors: string[];
 };
 export function buildReport(results: unknown): BuiltReport;
+export function buildReportFromJUnit(platforms: { project: string; xml: string | null; file?: string; required?: boolean; evidence?: Evidence }[]): BuiltReport;
+export function rawStats(report: BuiltReport): Record<string, number | string | null>;

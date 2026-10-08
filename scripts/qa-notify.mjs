@@ -14,8 +14,8 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 
-import { CATEGORY, classifyFailure, artifactPath, buildReport } from '../dashboard/lib/qa-report-core.mjs';
-export { CATEGORY, classifyFailure, artifactPath, buildReport };
+import { CATEGORY, classifyFailure, artifactPath, buildReport, buildReportFromJUnit, rawStats } from '../dashboard/lib/qa-report-core.mjs';
+export { CATEGORY, classifyFailure, artifactPath, buildReport, buildReportFromJUnit };
 
 /* ---------- context, people, links ---------- */
 
@@ -43,7 +43,7 @@ function headline(ctx, report) {
   return { ok, phase, text: `${ok ? '✅' : '❌'} QA · ${phase} ${ok ? 'passed' : 'failed'}${ctx.prNumber ? ` · PR #${ctx.prNumber}` : ''}` };
 }
 
-export const PHASE_LABEL = { 'pre-merge': 'Pre-merge (API)', 'post-merge': 'Post-merge (UI + API)', regression: 'Weekly regression', manual: 'Manual', drill: 'Failure drill', health: 'Health check' };
+export const PHASE_LABEL = { 'pre-merge': 'Pre-merge (API)', 'post-merge': 'Post-merge (UI + API)', regression: 'Weekly regression', manual: 'Manual', drill: 'Failure drill', health: 'Health check', mobile: 'Mobile (Android + iOS)' };
 
 const MARKER = (phase) => `<!-- qa-report:${phase} -->`;
 
@@ -146,6 +146,33 @@ export function renderTeams(ctx, report, people) {
   };
 }
 
+/* ---------- mobile (JUnit) ---------- */
+
+/** Reads each platform's JUnit and the evidence files the device scripts leave next to it. */
+export function junitReport(spec, suite = 'both') {
+  const platforms = spec.split(',').map((pair) => {
+    const [project, file] = pair.split('=');
+    const dir = file.replace(/\/[^/]*$/, '');
+    const pick = (...names) => names.map((n) => `${dir}/${n}`).find((f) => existsSync(f)) ?? null;
+    return {
+      project, file: `mobile/flows/${project}`,
+      required: suite === 'both' || suite === project,
+      xml: existsSync(file) ? readFileSync(file, 'utf8') : null,
+      evidence: { screenshot: pick('failure.png', '03-malformed-email-validation.png', '02-empty-email-validation.png', '01-signin-page.png'), video: pick('recording.mp4'), trace: null, log: pick('maestro-log.txt') },
+    };
+  });
+  const report = buildReportFromJUnit(platforms.filter((p) => p.required || p.xml));
+  // Evidence the flow saved when the app showed its session error before the retry.
+  for (const p of platforms) {
+    const dir = spec.split(',').find((x) => x.startsWith(`${p.project}=`))?.split('=')[1]?.replace(/\/[^/]*$/, '');
+    if (!dir || !existsSync(`${dir}/00-session-error.png`)) continue;
+    const failed = report.failures.some((f) => f.project === p.project);
+    const env = existsSync(`${dir}/os-version.txt`) ? readFileSync(`${dir}/os-version.txt`, 'utf8').trim().replace(/\s*\n\s*/g, ', ') : '';
+    report.findings.push(`MOB-001 (${p.project}${env ? `, ${env}` : ''}): sign-in page shows "Unable to load your session"; ${failed ? 'Retry does not recover' : 'recovered after Retry'}.`);
+  }
+  return report;
+}
+
 /* ---------- CI context ---------- */
 
 /**
@@ -207,8 +234,11 @@ async function main() {
   const config = existsSync(env.QA_CONFIG ?? '.github/qa-notify.json') ? JSON.parse(readFileSync(env.QA_CONFIG ?? '.github/qa-notify.json', 'utf8')) : {};
   const ctx = { ...ciContext(env), target: env.BASE_URL ?? 'https://dashboard.allocations.com', env: env.QA_ENV ?? null, envLabel: env.QA_ENV_LABEL ?? null, envNote: env.QA_ENV_NOTE ?? null, consoleUrl: (env.CONSOLE_URL || config.consoleUrl || '').replace(/\/$/, '') };
   const path = env.RESULTS_PATH ?? 'test-results/results.json';
-  const raw = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
-  const report = raw
+  let raw = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
+  // Mobile / native runners: QA_JUNIT=android=path,ios=path (Maestro JUnit + evidence next to it).
+  const junit = !raw && env.QA_JUNIT ? junitReport(env.QA_JUNIT, env.SUITE) : null;
+  if (junit) raw = { stats: rawStats(junit) };
+  const report = junit ? junit : raw
     ? buildReport(raw)
     : { stats: { total: 0, passed: 0, failed: 0, flaky: 0, skipped: 0, durationMs: 0 }, failures: [], flaky: [], byCategory: {}, findings: [], slowest: [], globalErrors: ['Playwright produced no results.json (install or config failure) — see the job log.'] };
   const people = resolvePeople(config, ctx, report);

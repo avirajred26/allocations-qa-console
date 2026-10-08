@@ -46,7 +46,7 @@ export type Suite = 'all' | 'desktop' | 'mobile' | 'drill';
 
 export type Scope = 'full' | 'api' | 'ui';
 /** Workflows the console may dispatch. qa-pr.yml is driven by PR events only. */
-export const DISPATCHABLE = ['qa-run.yml', 'qa-regression.yml'] as const;
+export const DISPATCHABLE = ['qa-run.yml', 'qa-regression.yml', 'qa-mobile.yml'] as const;
 export type DispatchWorkflow = (typeof DISPATCHABLE)[number];
 
 export type DispatchOutcome = 'accepted' | 'rejected' | 'uncertain';
@@ -75,12 +75,15 @@ function testDispatchMode(): DispatchOutcome | null {
   return m === 'accept' ? 'accepted' : m === 'reject' ? 'rejected' : m === 'uncertain' ? 'uncertain' : null;
 }
 
-export async function dispatchRun(runRef: string, suite: Suite, opts: { workflow?: DispatchWorkflow; scope?: Scope; environment?: string } = {}): Promise<DispatchOutcome> {
+export type Platform = 'both' | 'android' | 'ios';
+export async function dispatchRun(runRef: string, suite: Suite, opts: { workflow?: DispatchWorkflow; scope?: Scope; environment?: string; platform?: Platform } = {}): Promise<DispatchOutcome> {
   const forced = testDispatchMode();
   if (forced) return forced;
 
-  const workflow = opts.workflow === 'qa-regression.yml' ? 'qa-regression.yml' : WORKFLOW;
-  const inputs = workflow === 'qa-regression.yml'
+  const workflow = opts.workflow && DISPATCHABLE.includes(opts.workflow) ? opts.workflow : WORKFLOW;
+  const inputs = workflow === 'qa-mobile.yml'
+    ? { run_ref: runRef, platform: opts.platform ?? 'both', environment: opts.environment ?? 'prod' }
+    : workflow === 'qa-regression.yml'
     ? { run_ref: runRef, environment: opts.environment ?? 'prod' }
     : { run_ref: runRef, target: 'prod-public', suite, scope: opts.scope ?? 'full', environment: opts.environment ?? 'prod' };
   let res: Response;
@@ -155,7 +158,7 @@ export type WorkflowRun = {
 };
 
 /** Every QA workflow in this repo: manual/health runs, the PR gate and the weekly regression. */
-export const QA_WORKFLOWS = [`.github/workflows/${WORKFLOW}`, '.github/workflows/qa-pr.yml', '.github/workflows/qa-regression.yml'];
+export const QA_WORKFLOWS = [`.github/workflows/${WORKFLOW}`, '.github/workflows/qa-pr.yml', '.github/workflows/qa-regression.yml', '.github/workflows/qa-mobile.yml'];
 
 /** Runs of the QA workflows, newest first (dispatch, schedule, pull_request and push alike). */
 export async function listRuns(perPage = 30): Promise<WorkflowRun[]> {
