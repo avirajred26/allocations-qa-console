@@ -101,6 +101,49 @@ function PipelineDiagram() {
   );
 }
 
+/** Web and mobile side by side: same gates, different steps. Web nodes blue, mobile nodes green. */
+function OverviewDiagram() {
+  const WEB = 'var(--primary)';
+  const MOB = 'var(--success)';
+  const box = 'fill-[var(--card)] stroke-[var(--border)]';
+  const node = (x: number, y: number, w: number, title: string, sub: string, tone: string) => (
+    <g transform={`translate(${x},${y})`}>
+      <rect width={w} height="54" rx="8" className={box} strokeWidth="1" />
+      <rect width={w} height="3" rx="1.5" fill={tone} />
+      <text x="12" y="25" className="fill-[var(--foreground)]" fontSize="12" fontWeight="600">{title}</text>
+      <text x="12" y="42" className="fill-[var(--muted-foreground)]" fontSize="10.5" fontFamily="var(--font-mono)">{sub}</text>
+    </g>
+  );
+  const chip = (y: number, label: string, tone: string) => (
+    <g transform={`translate(0,${y})`}>
+      <rect width="74" height="24" rx="12" fill={tone} opacity="0.12" />
+      <text x="37" y="16" textAnchor="middle" fontSize="10.5" fontWeight="700" letterSpacing="1" fill={tone}>{label}</text>
+    </g>
+  );
+  const arrow = (x1: number, y: number, x2: number) => <line x1={x1} y1={y} x2={x2} y2={y} stroke="var(--muted-foreground)" strokeWidth="1.2" markerEnd="url(#o-arrow)" />;
+  const lane = (y: number, tone: string, steps: [string, string][]) => {
+    const w = 152, gap = 22, x0 = 90;
+    return steps.map(([t, sub], i) => (
+      <g key={t}>
+        {node(x0 + i * (w + gap), y, w, t, sub, tone)}
+        {i < steps.length - 1 && arrow(x0 + i * (w + gap) + w, y + 27, x0 + (i + 1) * (w + gap))}
+      </g>
+    ));
+  };
+  return (
+    <div className="overflow-x-auto">
+      <svg viewBox="0 0 960 170" className="min-w-[760px]" role="img" aria-label="Web lane: PR, pre-merge API checks, merge, post-merge UI and API checks, weekly regression. Mobile lane: PR, app build and key flows, merge, beta on TestFlight and Play, release gate and staged rollout. Both lanes produce the same report.">
+        <defs><marker id="o-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" /></marker></defs>
+        {chip(15, 'WEB', WEB)}
+        {lane(0, WEB, [['PR', 'opened / pushed'], ['Pre-merge', 'API · 4 checks'], ['Merge', 'required check'], ['Post-merge', 'UI + API · 14'], ['Weekly', 'regression · 3×']])}
+        {chip(103, 'MOBILE', MOB)}
+        {lane(88, MOB, [['PR', 'build · flows'], ['Merge', 'staging build'], ['Beta', 'TestFlight · Play'], ['Release gate', 'crash-free 99.5%'], ['Rollout', '10% → 100%']])}
+        <text x="90" y="162" className="fill-[var(--muted-foreground)]" fontSize="10.5">Both lanes: same triage, severity and report. Mobile today runs in the phone browser (no app build yet).</text>
+      </svg>
+    </div>
+  );
+}
+
 /** Mobile pipeline: the app lifecycle, plus what this assignment runs today. */
 function MobilePipelineDiagram() {
   const box = 'fill-[var(--card)] stroke-[var(--border)]';
@@ -118,26 +161,26 @@ function MobilePipelineDiagram() {
       <svg viewBox="0 0 960 300" className="min-w-[760px]" role="img" aria-label="Mobile pipeline: PR builds the apps and runs unit tests and key flows on a simulator and emulator; merge makes a signed staging build, runs the full suite and uploads to TestFlight and Play internal; weekly regression runs on real devices; release needs green regression and crash-free beta, then a staged rollout watched in Crashlytics. Today the assignment runs the sign-in checks in Chrome on an Android emulator and Safari on an iPhone simulator.">
         <defs><marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" /></marker></defs>
         <text x="0" y="14" className="fill-[var(--muted-foreground)]" fontSize="10" letterSpacing="1.5">APP LIFECYCLE (WITH A REAL APP BUILD)</text>
-        {node(0, 28, 170, 'PR', 'build · unit · key flows', 'var(--chart-1)')}
-        {arrow(170, 57, 200)}
-        {node(200, 28, 180, 'Merge to main', 'staging build · full suite', 'var(--chart-2)')}
-        {arrow(380, 57, 410)}
-        {node(410, 28, 170, 'Beta', 'TestFlight · Play internal')}
-        {arrow(580, 57, 610)}
-        {node(610, 28, 160, 'Release gate', 'devices green · ≥99.5%', 'var(--warning)')}
-        {arrow(770, 57, 800)}
-        {node(800, 28, 160, 'Staged rollout', '10% → 100%', 'var(--success)')}
-        {node(200, 108, 380, 'Weekly regression on real devices', 'BrowserStack / Firebase · iOS 17–18 · Android 12–15', 'var(--warning)')}
-        <path d="M290 86 V108" stroke="var(--border)" strokeWidth="1.2" />
-        <path d="M580 137 H690 V86" fill="none" stroke="var(--border)" strokeWidth="1.2" markerEnd="url(#m-arrow)" />
+        {node(0, 28, 168, 'PR', 'build · unit · flows', 'var(--chart-1)')}
+        {arrow(168, 57, 194)}
+        {node(194, 28, 182, 'Merge to main', 'staging · full suite', 'var(--chart-2)')}
+        {arrow(376, 57, 402)}
+        {node(402, 28, 172, 'Beta', 'TestFlight · Play')}
+        {arrow(574, 57, 600)}
+        {node(600, 28, 172, 'Release gate', 'crash-free ≥99.5%', 'var(--warning)')}
+        {arrow(772, 57, 798)}
+        {node(798, 28, 162, 'Staged rollout', '10% → 100%', 'var(--success)')}
+        {node(194, 108, 380, 'Weekly regression on real devices', 'iOS 17–18 · Android 12–15', 'var(--warning)')}
+        <path d="M285 86 V108" stroke="var(--border)" strokeWidth="1.2" />
+        <path d="M574 137 H686 V86" fill="none" stroke="var(--border)" strokeWidth="1.2" markerEnd="url(#m-arrow)" />
         <text x="0" y="200" className="fill-[var(--muted-foreground)]" fontSize="10" letterSpacing="1.5">RUNNING NOW IN THIS ASSIGNMENT</text>
-        {node(0, 212, 200, 'Trigger', 'PR · weekly · manual', 'var(--chart-5)')}
-        {arrow(200, 241, 230)}
-        {node(230, 212, 220, 'Android emulator', 'Chrome · Pixel 6 · API 34', 'var(--chart-1)')}
-        {node(470, 212, 220, 'iPhone simulator', 'Safari · macOS runner', 'var(--chart-1)')}
-        <text x="460" y="206" textAnchor="middle" className="fill-[var(--muted-foreground)]" fontSize="10">in parallel</text>
-        {arrow(690, 241, 720)}
-        {node(720, 212, 240, 'One report', 'screenshots · recording · log', 'var(--success)')}
+        {node(0, 212, 190, 'Trigger', 'PR · weekly · manual', 'var(--chart-5)')}
+        {arrow(190, 241, 216)}
+        {node(216, 212, 230, 'Android emulator', 'Chrome · Pixel 6', 'var(--chart-1)')}
+        {node(462, 212, 230, 'iPhone simulator', 'Safari · macOS', 'var(--chart-1)')}
+        <text x="454" y="206" textAnchor="middle" className="fill-[var(--muted-foreground)]" fontSize="10">in parallel</text>
+        {arrow(692, 241, 718)}
+        {node(718, 212, 242, 'One report', 'screenshots · video · log', 'var(--success)')}
       </svg>
     </div>
   );
@@ -153,11 +196,15 @@ export default function ProcessPage() {
       />
 
       <nav aria-label="On this page" className="flex flex-wrap gap-2 text-xs">
-        {[['pipeline', 'Pipeline'], ['triggers', 'Triggers & scope'], ['environments', 'Environments'], ['cicd', 'CI/CD'], ['mobile', 'Mobile'], ['checks', 'Test inventory'], ['gates', 'Quality gates'], ['triage', 'Failure triage'], ['severity', 'Severity'], ['reporting', 'Reporting'], ['safety', 'Safety'], ['roles', 'Roles']].map(([id, label]) => (
+        {[['overview', 'Web + Mobile'], ['pipeline', 'Pipeline'], ['triggers', 'Triggers & scope'], ['environments', 'Environments'], ['cicd', 'CI/CD'], ['mobile', 'Mobile'], ['checks', 'Test inventory'], ['gates', 'Quality gates'], ['triage', 'Failure triage'], ['severity', 'Severity'], ['reporting', 'Reporting'], ['safety', 'Safety'], ['roles', 'Roles']].map(([id, label]) => (
           <a key={id} href={`#${id}`} className="rounded-md border bg-card px-2.5 py-1 text-muted-foreground transition hover:border-primary/40 hover:text-foreground">{label}</a>
         ))}
       </nav>
 
+
+      <Section id="overview" icon={RouteIcon} title="Web + Mobile at a glance">
+        <OverviewDiagram />
+      </Section>
 
       <Section id="pipeline" icon={RouteIcon} title="Pipeline">
         <PipelineDiagram />

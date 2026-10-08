@@ -43,7 +43,7 @@ function headline(ctx, report) {
   return { ok, phase, text: `${ok ? '✅' : '❌'} QA · ${phase} ${ok ? 'passed' : 'failed'}${ctx.prNumber ? ` · PR #${ctx.prNumber}` : ''}` };
 }
 
-export const PHASE_LABEL = { 'pre-merge': 'Pre-merge (API)', 'post-merge': 'Post-merge (UI + API)', regression: 'Weekly regression', manual: 'Manual', drill: 'Failure drill', health: 'Health check' };
+export const PHASE_LABEL = { 'pre-merge': 'Pre-merge (API)', 'post-merge': 'Post-merge (UI + API)', regression: 'Weekly regression', manual: 'Manual', drill: 'Failure drill', health: 'Health check', mobile: 'Mobile (Android + iOS)' };
 
 const MARKER = (phase) => `<!-- qa-report:${phase} -->`;
 
