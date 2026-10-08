@@ -1,0 +1,25 @@
+# Shared sign-in checks, run inside the platform browser on a real mobile OS.
+# Read-only: loads the public sign-in page and only tries inputs the web harness
+# (SM-002) proved are rejected client-side, so no request reaches Allocations.
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 45000
+- assertVisible: "Sign in with a passkey"
+- takeScreenshot: ${OUT}/01-signin-page
+
+# Empty submit -> client-side validation message
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: ".*valid email.*"
+    timeout: 10000
+- takeScreenshot: ${OUT}/02-empty-email-validation
+
+# Malformed email -> still rejected client-side
+- tapOn: "mail@address.com"
+- inputText: "not-an-email"
+- hideKeyboard
+- tapOn: "Continue"
+- assertVisible: ".*valid email.*"
+- takeScreenshot: ${OUT}/03-malformed-email-validation
