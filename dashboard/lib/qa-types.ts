@@ -28,6 +28,9 @@ export type HistoryRun = {
   stats: CheckStats | null;
   /** Failure count per cause (ui / backend / network / timeout / test), when the run has a qa-summary. */
   causes: Record<string, number> | null;
+  /** Environment label and suite from the run's summary, when it has one. */
+  env?: string | null;
+  suite?: string | null;
 };
 
 /** Shape written by scripts/qa-notify.mjs into qa-summary.json (only the fields the console reads). */
