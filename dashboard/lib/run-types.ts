@@ -30,6 +30,8 @@ export interface SessionRun {
 export const NOT_FOUND_DEADLINE_MS = 3 * 60 * 1000;
 export const POLL_INTERVAL_MS = 12_000;
 export const RUN_REF_PATTERN = /^[A-Za-z0-9_-]{8,32}$/;
+/** GitHub run id from a run URL, for the console's own report page (/runs/gh/<id>). */
+export const githubRunId = (url?: string) => url?.match(/\/actions\/runs\/(\d+)/)?.[1];
 
 export function safeGithubUrl(v: unknown): string | undefined {
   if (typeof v !== 'string') return undefined;

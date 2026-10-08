@@ -107,8 +107,7 @@ export default function ProcessPage() {
       <PageHeader
         eyebrow="PROCESS"
         title="QA/QC process"
-        description="How every change to dashboard.allocations.com is checked, how failures are triaged, and what decides a release."
-        actions={<a href={`${REPO_URL}/tree/main/.github/workflows`} target="_blank" rel="noopener noreferrer" className="qa-link-button">Workflows on GitHub ↗</a>}
+        description="How changes to dashboard.allocations.com are tested, and what happens when a test fails."
       />
 
       <nav aria-label="On this page" className="flex flex-wrap gap-2 text-xs">
@@ -117,57 +116,40 @@ export default function ProcessPage() {
         ))}
       </nav>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          ['Quality assurance', 'Prevent regressions reaching main: fast API gate before merge, full UI + API verification after, and a weekly regression of everything.'],
-          ['Quality control', 'Every run is measured: totals, durations, failure causes and evidence, reported where the team already works.'],
-          ['Honest scope', 'Automated checks cover the public, pre-auth surface. Authenticated flows (SPV formation, KYC, capital calls, distributions) are mocked and labelled until credentials exist.'],
-        ].map(([t, b]) => <div key={t} className="qa-panel"><h2 className="text-sm font-semibold">{t}</h2><p className="mt-2 text-xs leading-6 text-muted-foreground">{b}</p></div>)}
-      </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-card px-5 py-3 text-xs">
-        <span className="font-medium">How this console was built</span>
-        <span className="text-muted-foreground">1 · UI generated in <a href={V0_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">v0.dev ↗</a> from dashboard/V0_PROMPT.md</span>
-        <span className="text-muted-foreground">2 · Published on Vercel</span>
-        <span className="text-muted-foreground">3 · Extended in code: harness, CI gates, trigger backend, run reports</span>
-        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="ml-auto text-primary hover:underline">Repository ↗</a>
-      </div>
-
-      <Section id="pipeline" icon={RouteIcon} title="Pipeline" intro="A change moves left to right; a red gate sends it back. Scheduled and manual runs produce the same report.">
+      <Section id="pipeline" icon={RouteIcon} title="Pipeline">
         <PipelineDiagram />
       </Section>
 
-      <Section id="triggers" icon={CalendarClockIcon} title="Triggers & scope" intro="What runs when. Scope is selected by QA_SCOPE in playwright.config.ts; API specs are recognised by filename, so new specs land in the right gate automatically.">
+      <Section id="triggers" icon={CalendarClockIcon} title="Triggers & scope" intro="QA_SCOPE in playwright.config.ts picks the tests. API specs are picked by filename.">
         <div className="-m-5 overflow-x-auto"><table className="qa-table min-w-[900px]"><thead><tr><th>Trigger</th><th>When</th><th>Scope</th><th>Devices</th><th>Runs</th><th>Effect</th><th>Source</th></tr></thead><tbody>
           {TRIGGERS.map((t) => <tr key={t.name}><td><span className="flex items-center gap-2 font-medium"><t.icon className="size-4 text-primary" aria-hidden />{t.name}</span></td><td className="text-xs text-muted-foreground">{t.when}</td><td className="text-xs">{t.scope}</td><td className="text-xs text-muted-foreground">{t.devices}</td><td className="font-mono text-[11px]">{t.runs}</td><td className="text-xs">{t.gate}</td><td className="font-mono text-[11px] text-muted-foreground">{t.file}</td></tr>)}
         </tbody></table></div>
       </Section>
 
-      <Section id="environments" icon={ServerIcon} title="Environments" intro="One registry, dashboard/qa-environments.json, read by the harness, every pipeline and this console. An environment without a URL is listed but cannot be targeted; nothing silently falls back to production.">
+      <Section id="environments" icon={ServerIcon} title="Environments" intro="All environments are listed in dashboard/qa-environments.json.">
         <div className="-m-5 overflow-x-auto"><table className="qa-table min-w-[720px]"><thead><tr><th>Environment</th><th>URL</th><th>Used by</th><th>Status</th></tr></thead><tbody>
           {ENVIRONMENTS.map((e) => {
             const gates = Object.entries(GATES).filter(([, id]) => id === e.id).map(([g]) => g);
             return <tr key={e.id}><td className="text-xs font-medium">{e.label} <span className="font-mono text-[10px] text-muted-foreground">{e.id}</span></td><td className="font-mono text-[11px]">{e.baseUrl ?? '—'}</td><td className="text-xs text-muted-foreground">{gates.length ? gates.join(', ') : 'manual only'}</td><td>{e.aliasOf ? <span className="rounded bg-warning/15 px-1.5 py-0.5 font-mono text-[10px] text-warning" title={e.notes}>DEMO ALIAS → {e.aliasOf.toUpperCase()}</span> : e.baseUrl ? <span className="rounded bg-success/15 px-1.5 py-0.5 font-mono text-[10px] text-success">CONFIGURED</span> : <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">NO URL YET</span>}</td></tr>;
           })}
         </tbody></table></div>
-        <p className="mt-8 text-[11px] leading-5 text-muted-foreground">Gate mapping: pre-merge and post-merge target staging; the regression, health check and manual runs target production. Only Allocations&apos; production URL is known for this assignment, so dev and staging are demo aliases of the public production surface: they can be selected and run end to end, and every report labels them as aliases. Replacing their baseUrl in the registry points the whole pipeline at the real environments at once.</p>
+        <p className="mt-8 text-[11px] leading-5 text-muted-foreground">Only the production URL exists for this assignment, so dev and staging point at it and are marked as demo aliases in every report.</p>
       </Section>
 
-      <Section id="cicd" icon={BoxesIcon} title="CI/CD portability" intro="The harness is CI-agnostic: one entrypoint, standard outputs. GitHub Actions is live; the Azure DevOps pipeline ships ready to import.">
+      <Section id="cicd" icon={BoxesIcon} title="CI/CD portability">
         <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
           <div className="space-y-3 text-xs leading-5 text-muted-foreground">
-            <p><span className="font-medium text-foreground">Entrypoint:</span> <code className="font-mono">scripts/qa-ci.sh</code> resolves the environment, runs Playwright with the phase&apos;s scope, writes the report and exits with Playwright&apos;s status.</p>
-            <p><span className="font-medium text-foreground">Outputs any CI understands:</span> JUnit (<code className="font-mono">test-results/junit.xml</code>), the HTML report, screenshots / recordings / traces, <code className="font-mono">qa-report.md</code> and <code className="font-mono">qa-summary.json</code>.</p>
-            <p><span className="font-medium text-foreground">Context detection:</span> the reporter reads GitHub Actions, Azure DevOps, GitLab and Jenkins variables for run link, PR number and author; <code className="font-mono">QA_RUN_URL</code> / <code className="font-mono">QA_PR_NUMBER</code> / <code className="font-mono">QA_AUTHOR</code> override for anything else.</p>
-            <p><span className="font-medium text-foreground">Live in this console:</span> run history, run reports and inline evidence read GitHub Actions. On other CI the same report lives in that system&apos;s run (Azure: Tests tab + &quot;QA report&quot; tab + artifacts).</p>
+            <p><code className="font-mono">scripts/qa-ci.sh</code> runs the same steps on any CI: pick the environment, run Playwright, write the report.</p>
+            <p>Outputs: JUnit, the HTML report, screenshots, recordings, traces, <code className="font-mono">qa-report.md</code>.</p>
           </div>
           <div className="-mx-5 -mb-5 overflow-x-auto border-t lg:mx-0 lg:mb-0 lg:rounded-md lg:border"><table className="qa-table min-w-[520px]"><thead><tr><th>CI/CD</th><th>File</th><th>Status</th></tr></thead><tbody>
-            {[['GitHub Actions', '.github/workflows/qa-pr.yml · qa-run.yml · qa-regression.yml', 'Live: PR gate, post-merge, weekly, manual'], ['Azure DevOps', 'azure-pipelines.yml', 'Ready to import (PR, main, weekly, manual parameters); not run here, no Azure org'], ['GitLab CI / Jenkins / other', 'call scripts/qa-ci.sh with QA_PHASE', 'Same entrypoint; publish junit.xml and the report folders']].map(([c, f, st]) => <tr key={c}><td className="text-xs font-medium">{c}</td><td className="font-mono text-[11px] text-muted-foreground">{f}</td><td className="text-xs">{st}</td></tr>)}
+            {[['GitHub Actions', '.github/workflows/qa-pr.yml · qa-run.yml · qa-regression.yml', 'Live'], ['Azure DevOps', 'azure-pipelines.yml', 'Ready to import; not run yet'], ['GitLab CI / Jenkins / other', 'call scripts/qa-ci.sh with QA_PHASE', 'Call scripts/qa-ci.sh']].map(([c, f, st]) => <tr key={c}><td className="text-xs font-medium">{c}</td><td className="font-mono text-[11px] text-muted-foreground">{f}</td><td className="text-xs">{st}</td></tr>)}
           </tbody></table></div>
         </div>
       </Section>
 
-      <Section id="checks" icon={ClipboardCheckIcon} title="Test inventory" intro="Automated checks today (each runs on desktop Chromium and iPhone 13 WebKit unless noted). Authenticated product flows stay in the scenario library as labelled mocks.">
+      <Section id="checks" icon={ClipboardCheckIcon} title="Test inventory" intro="Each check runs on desktop Chrome and iPhone 13 unless noted.">
         <div className="-m-5 overflow-x-auto"><table className="qa-table min-w-[720px]"><thead><tr><th>ID</th><th>Level</th><th>What it proves</th><th>Gate</th></tr></thead><tbody>
           {CHECKS.map(([id, level, what]) => <tr key={id}><td className="whitespace-nowrap font-mono text-xs text-primary">{id}</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">{level}</span></td><td className="text-xs leading-5">{what}</td><td className="text-xs text-muted-foreground">{level === 'API' ? 'Pre-merge · post-merge · regression' : 'Post-merge · regression'}</td></tr>)}
           <tr><td className="font-mono text-xs text-warning">DRILL</td><td><span className="rounded border px-1.5 py-0.5 font-mono text-[10px]">UI + API</span></td><td className="text-xs leading-5">Two deliberate failures that exercise the reporting path end to end; never part of a gate</td><td className="text-xs text-muted-foreground">Manual only</td></tr>
@@ -184,7 +166,7 @@ export default function ProcessPage() {
         </div>
       </Section>
 
-      <Section id="triage" icon={SirenIcon} title="Failure triage (QC loop)" intro="What happens from a red check to closure. Steps 1–4 are automated; 5–7 are owned by people.">
+      <Section id="triage" icon={SirenIcon} title="Failure triage (QC loop)">
         <ol className="grid gap-3 md:grid-cols-7">
           {[['Detect', 'Gate or schedule goes red'], ['Classify', 'Cause from error text and spec type'], ['Route', 'Owner by cause; author @mentioned'], ['Evidence', 'Screenshot, recording, trace, log'], ['Ticket', 'Severity P1–P4, owner, due date'], ['Fix & retest', 'Push → pre-merge reruns'], ['Close', 'Green post-merge; flaky → quarantine']].map(([t, b], i) => (
             <li key={t} className="rounded-md border bg-background/50 p-3"><span className="font-mono text-[10px] text-primary">0{i + 1}</span><p className="mt-1 text-xs font-medium">{t}</p><p className="mt-1 text-[11px] leading-4 text-muted-foreground">{b}</p></li>
@@ -193,7 +175,7 @@ export default function ProcessPage() {
         <div className="-mx-5 -mb-5 mt-5 overflow-x-auto border-t"><table className="qa-table min-w-[640px]"><thead><tr><th>Cause</th><th>Rule (first match wins)</th><th>Routed to</th></tr></thead><tbody>
           {CAUSES.map(([c, r, o]) => <tr key={c}><td className="font-mono text-xs">{c}</td><td className="text-xs text-muted-foreground">{r}</td><td className="text-xs">{o}</td></tr>)}
         </tbody></table></div>
-        <p className="mt-8 text-[11px] leading-5 text-muted-foreground">Flaky policy: a check that passes only on retry is reported as flaky in every run. Two flaky results in a week → quarantine with a ticket for at most 7 days; a quarantined blocker makes the release CONDITIONAL GO, never GO.</p>
+        <p className="mt-8 text-[11px] leading-5 text-muted-foreground">Flaky tests: passing only on retry counts as flaky. Two flaky results in a week means quarantine with a ticket, for up to 7 days.</p>
       </Section>
 
       <Section id="severity" icon={GaugeIcon} title="Severity">
@@ -209,7 +191,7 @@ export default function ProcessPage() {
         </div>
       </Section>
 
-      <Section id="safety" icon={ShieldCheckIcon} title="Safety boundaries" intro="The harness runs against production, so it is built to be harmless there.">
+      <Section id="safety" icon={ShieldCheckIcon} title="Safety boundaries">
         <ul className="grid gap-3 text-xs leading-5 text-muted-foreground md:grid-cols-2">
           {['Public, pre-auth surface only; no credentials, no OTP requests, no accounts created', 'Fail-closed request guard: every non-GET request is aborted except the app’s own startup /api/auth/refresh', 'Service workers blocked so the guard sees every request', 'The console’s trigger is open for the demo but bounded: same-origin requests only, allowlisted workflows and configured environments only, 30 s cooldown, 20 runs a day overall and 5 per browser. A demo key can be required again with TRIGGER_REQUIRE_KEY=1', 'The failure drill is read-only: one page load and one anonymous GET', 'Live target checks are cached for 60 s: at most one probe a minute from the console'].map((i) => <li key={i} className="flex gap-2 rounded-md border bg-background/50 p-3"><ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0 text-success" aria-hidden />{i}</li>)}
         </ul>

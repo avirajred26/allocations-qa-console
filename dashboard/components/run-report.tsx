@@ -141,7 +141,6 @@ export function RunReportView({ runId }: { runId: string }) {
         eyebrow="RUN REPORT"
         title={r ? `${PHASE_LABEL[r.phase]} · ${r.title.replace(/^QA (run )?/, '')}` : 'Run report'}
         description={r ? <>GitHub Actions run {r.id} · {r.startedAt.slice(0, 16).replace('T', ' ')} UTC{r.durationSec ? ` · ${r.durationSec}s` : ''}{r.scope ? ` · scope ${r.scope}` : ''}</> : 'Totals, failure causes and evidence for one QA run.'}
-        actions={r && <><a href={r.url} target="_blank" rel="noopener noreferrer" className="qa-link-button gap-1.5">GitHub run <ArrowUpRightIcon className="size-3.5" /></a>{r.ctx?.prUrl && <a href={r.ctx.prUrl} target="_blank" rel="noopener noreferrer" className="qa-link-button gap-1.5">PR #{r.ctx.prNumber} <ArrowUpRightIcon className="size-3.5" /></a>}</>}
       />
       {isLoading && !r ? <Skeleton className="h-64 w-full" /> : error ? (
         <div className="qa-panel text-sm text-muted-foreground">{status === 404 ? 'This is not a QA run in this repository.' : 'This run could not be read from GitHub right now.'}</div>
@@ -155,7 +154,6 @@ export function RunReportView({ runId }: { runId: string }) {
             <span><span className="text-muted-foreground">Branch</span> {r.branch}</span>
             <span><span className="text-muted-foreground">Environment</span> {r.ctx?.envLabel ?? 'Production'}</span>
             <span><span className="text-muted-foreground">Target</span> {r.ctx?.target?.replace(/^https?:\/\//, '') ?? 'dashboard.allocations.com'}</span>
-            <ProvenanceBadge kind="live" className="ml-auto" />
           </div>
           {stats ? (
             <div className="grid grid-cols-3 overflow-hidden rounded-lg border bg-card sm:grid-cols-6 [&>div+div]:border-l">
@@ -163,7 +161,7 @@ export function RunReportView({ runId }: { runId: string }) {
                 <div key={k} className="px-4 py-4"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{k}</p><p className={cn('mt-2 font-mono text-2xl', cls)}>{v}</p></div>
               ))}
             </div>
-          ) : r.status === 'completed' && <div className="qa-panel text-sm text-muted-foreground">No summary was uploaded for this run (it predates the reporter, or its artifacts expired). Open the GitHub run for the raw logs.</div>}
+          ) : r.status === 'completed' && <div className="qa-panel text-sm text-muted-foreground">No results were saved for this run. Its artifacts may have expired.</div>}
           {rep && rep.globalErrors.length > 0 && <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">Harness error: {rep.globalErrors.join('; ')}</div>}
           {rep && rep.failures.length > 0 && (
             <section className="space-y-4">

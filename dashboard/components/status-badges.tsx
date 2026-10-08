@@ -78,9 +78,9 @@ export function AuthLock() {
         }
       >
         <LockIcon aria-hidden className="size-3.5" />
-        <span className="sr-only">Authenticated product flow — mocked; requires Allocations credentials</span>
+        <span className="sr-only">Logged-in flow. Mock data, needs an Allocations login</span>
       </TooltipTrigger>
-      <TooltipContent>Authenticated product flow — mocked; requires Allocations credentials</TooltipContent>
+      <TooltipContent>Logged-in flow. Mock data, needs an Allocations login</TooltipContent>
     </Tooltip>
   );
 }

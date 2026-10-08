@@ -1,3 +1,10 @@
-import { REPO_URL, V0_URL } from '@/lib/fixture';
+import { V0_URL } from '@/lib/fixture';
 
-export function SiteFooter(){return <footer className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t px-7 py-3 text-[10px] text-muted-foreground"><span>Independent assignment · not an official Allocations product · Built with <a href={V0_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">v0.dev</a> → deployed on Vercel → extended with a Playwright harness and <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GitHub Actions</a></span><span className="font-mono">SOURCE-LABELLED EVIDENCE · 2026.10</span></footer>;}
+export function SiteFooter() {
+  return (
+    <footer className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t px-7 py-3 text-[11px] text-muted-foreground">
+      <span>Aviraj Lall · QA assignment for Allocations</span>
+      <a href={V0_URL} target="_blank" rel="noopener noreferrer" className="hover:text-foreground">v0</a>
+    </footer>
+  );
+}

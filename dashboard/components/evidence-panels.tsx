@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ExternalLinkIcon, FlaskConicalIcon, GitBranchIcon } from 'lucide-react';
 import { CI_EVIDENCE, LOCAL_EVIDENCE } from '@/lib/local-evidence';
 
@@ -15,7 +16,7 @@ export function EvidencePanels() {
         <div><p className="font-mono text-2xl text-muted-foreground">{evidence.skipped}</p><p className="qa-caption">Skipped</p></div>
       </div>
       <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-      {tag === 'RECORDED CI' && <a className="mt-4 inline-flex items-center gap-2 text-sm text-primary hover:underline" href={CI_EVIDENCE.url} target="_blank" rel="noopener noreferrer">Run & report artifact <ExternalLinkIcon className="size-3.5" /></a>}
+      {tag === 'RECORDED CI' && <Link className="mt-4 inline-flex items-center gap-2 text-sm text-primary hover:underline" href={`/runs/gh/${CI_EVIDENCE.url.split('/').pop()}`}>Run report</Link>}
     </section>)}
   </div>;
 }
