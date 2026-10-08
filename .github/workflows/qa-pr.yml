@@ -29,13 +29,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      BASE_URL: https://dashboard.allocations.com
       CI: "true"
       QA_PHASE: ${{ github.event_name == 'pull_request' && 'pre-merge' || 'post-merge' }}
       # Pre-merge gates on the fast request-level (API) checks; post-merge runs UI + API.
       QA_SCOPE: ${{ github.event_name == 'pull_request' && 'api' || 'full' }}
     steps:
       - uses: actions/checkout@v4
+
+      # Target from dashboard/qa-environments.json. The gate's environment (pre-merge / post-merge), or the fallback if it has no URL yet.
+      - name: Resolve environment
+        run: node scripts/qa-env.mjs "${{ env.QA_PHASE }}" >> "$GITHUB_ENV"
+
 
       - uses: actions/setup-node@v4
         with:

@@ -13,6 +13,7 @@ export interface SessionRun {
   suite: Suite;
   workflow?: Workflow;
   scope?: Scope;
+  environment?: string;
   dispatch: Dispatch;
   startedAt: number;
   found: boolean;

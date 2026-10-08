@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildReport, classifyFailure, artifactPath, resolvePeople, renderMarkdown, renderSlack, renderTeams, links } from './qa-notify.mjs';
+import { buildReport, classifyFailure, artifactPath, resolvePeople, renderMarkdown, renderSlack, renderTeams, links, ciContext } from './qa-notify.mjs';
 
 // Real results.json from GitHub Actions run 37522348772 (6 Oct, pre-fix harness): 2 passed, 7 failed, 5 skipped.
 const failing = JSON.parse(readFileSync(new URL('./fixtures/failing-results.json', import.meta.url), 'utf8'));
@@ -69,4 +69,16 @@ test('Slack, Teams and Markdown messages carry PR, author, counts, causes and ev
   const md = renderMarkdown(ctx, r, people);
   assert.ok(md.startsWith('<!-- qa-report:pre-merge -->'));
   for (const s of ['❌ QA · Pre-merge (API) failed · PR #12', '| 14 | 2 | 7 | 0 | 5 | 1m 34s |', '**BACKEND**', '**UI**', '[trace](', '@fe-lead']) assert.ok(md.includes(s), `markdown missing ${s}`);
+});
+
+test('CI context is detected for GitHub, Azure DevOps, GitLab and Jenkins; QA_* overrides win', () => {
+  const gh = ciContext({ GITHUB_ACTIONS: 'true', GITHUB_REPOSITORY: 'o/r', GITHUB_RUN_ID: '42', PR_NUMBER: '7', PR_AUTHOR: 'dev' });
+  assert.deepEqual([gh.ci, gh.runUrl, gh.prNumber, gh.author, gh.evidenceViaConsole], ['github', 'https://github.com/o/r/actions/runs/42', '7', 'dev', true]);
+  const az = ciContext({ TF_BUILD: 'True', SYSTEM_COLLECTIONURI: 'https://dev.azure.com/acme/', SYSTEM_TEAMPROJECT: 'QA Team', BUILD_BUILDID: '99', SYSTEM_PULLREQUEST_PULLREQUESTNUMBER: '12', BUILD_REQUESTEDFOR: 'Ana' });
+  assert.deepEqual([az.ci, az.runUrl, az.prNumber, az.author, az.evidenceViaConsole], ['azure', 'https://dev.azure.com/acme/QA%20Team/_build/results?buildId=99', '12', 'Ana', false]);
+  assert.equal(ciContext({ GITLAB_CI: 'true', CI_PIPELINE_URL: 'https://gitlab/p/1', CI_MERGE_REQUEST_IID: '3' }).prNumber, '3');
+  assert.equal(ciContext({ JENKINS_URL: 'https://j', BUILD_URL: 'https://j/job/1', CHANGE_ID: '5' }).runUrl, 'https://j/job/1');
+  assert.equal(ciContext({ QA_RUN_URL: 'https://ci.example/run/1', QA_PR_NUMBER: '9' }).prNumber, '9');
+  const azLinks = links({ ...az, consoleUrl: 'https://console.example' }, buildReport(failing).failures[0]);
+  assert.equal(azLinks.screenshot, null, 'no console evidence links outside GitHub');
 });

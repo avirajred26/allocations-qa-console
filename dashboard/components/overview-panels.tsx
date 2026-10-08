@@ -71,7 +71,7 @@ export function KpiStrip(){
   </div>;
 }
 
-const runLabel=(r:{workflow?:string;suite:string;scope?:string})=>r.workflow==='qa-regression.yml'?'Regression · entire suite ×3':r.suite==='drill'?'Failure drill · deliberate failures':`${r.scope==='api'?'API':r.scope==='ui'?'UI':'UI + API'} · ${r.suite==='all'?'desktop + mobile':r.suite}`;
+const runLabel=(r:{workflow?:string;suite:string;scope?:string;environment?:string})=>`${(r.environment??'prod').toUpperCase()} · `+(r.workflow==='qa-regression.yml'?'Regression · entire suite ×3':r.suite==='drill'?'Failure drill · deliberate failures':`${r.scope==='api'?'API':r.scope==='ui'?'UI':'UI + API'} · ${r.suite==='all'?'desktop + mobile':r.suite}`);
 const runIdOf=(url?:string)=>url?.match(/\/actions\/runs\/(\d+)/)?.[1];
 
 /** Runs this browser dispatched, polled from GitHub by run_ref. Empty until someone presses Trigger run. */

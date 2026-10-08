@@ -1,0 +1,5 @@
+# Azure DevOps: publish only the QA evidence from the checkout.
+**/*
+!playwright-report/**
+!test-results/**
+!qa-report.md

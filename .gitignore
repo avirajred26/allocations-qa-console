@@ -10,3 +10,6 @@ next-env.d.ts
 !.env.example
 *.log
 .DS_Store
+qa-notify-report.json
+qa-report.md
+qa-summary.json

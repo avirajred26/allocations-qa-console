@@ -75,14 +75,14 @@ function testDispatchMode(): DispatchOutcome | null {
   return m === 'accept' ? 'accepted' : m === 'reject' ? 'rejected' : m === 'uncertain' ? 'uncertain' : null;
 }
 
-export async function dispatchRun(runRef: string, suite: Suite, opts: { workflow?: DispatchWorkflow; scope?: Scope } = {}): Promise<DispatchOutcome> {
+export async function dispatchRun(runRef: string, suite: Suite, opts: { workflow?: DispatchWorkflow; scope?: Scope; environment?: string } = {}): Promise<DispatchOutcome> {
   const forced = testDispatchMode();
   if (forced) return forced;
 
   const workflow = opts.workflow === 'qa-regression.yml' ? 'qa-regression.yml' : WORKFLOW;
   const inputs = workflow === 'qa-regression.yml'
-    ? { run_ref: runRef }
-    : { run_ref: runRef, target: 'prod-public', suite, scope: opts.scope ?? 'full' };
+    ? { run_ref: runRef, environment: opts.environment ?? 'prod' }
+    : { run_ref: runRef, target: 'prod-public', suite, scope: opts.scope ?? 'full', environment: opts.environment ?? 'prod' };
   let res: Response;
   try {
     res = await gh(`/repos/${OWNER}/${REPO}/actions/workflows/${workflow}/dispatches`, {
@@ -179,7 +179,22 @@ export async function getRun(runId: number): Promise<WorkflowRun | null> {
  * prefixes (in preference order). GitHub answers with a redirect to blob storage; fetch
  * drops the Authorization header on that cross-origin hop.
  */
+const ARTIFACT_CACHE = new Map<string, { at: number; value: { name: string; zip: Buffer } | null }>();
+const ARTIFACT_TTL_MS = 10 * 60_000;
+const ARTIFACT_CACHE_MAX = 3;
+
+/** Same as fetchArtifact, with a small per-instance cache: one report page asks for many files of one zip. */
 export async function downloadArtifact(runId: number, prefixes: string[]): Promise<{ name: string; zip: Buffer } | null> {
+  const key = `${runId}:${prefixes.join(',')}`;
+  const hit = ARTIFACT_CACHE.get(key);
+  if (hit && Date.now() - hit.at < ARTIFACT_TTL_MS) return hit.value;
+  const value = await fetchArtifact(runId, prefixes);
+  ARTIFACT_CACHE.set(key, { at: Date.now(), value });
+  while (ARTIFACT_CACHE.size > ARTIFACT_CACHE_MAX) ARTIFACT_CACHE.delete(ARTIFACT_CACHE.keys().next().value!);
+  return value;
+}
+
+async function fetchArtifact(runId: number, prefixes: string[]): Promise<{ name: string; zip: Buffer } | null> {
   const res = await gh(`/repos/${OWNER}/${REPO}/actions/runs/${runId}/artifacts?per_page=20`);
   if (!res.ok) throw new Error(`gh-artifacts-${res.status}`);
   const { artifacts } = (await res.json()) as { artifacts: Array<{ id: number; name: string; expired: boolean }> };
@@ -200,4 +215,35 @@ export async function workflowState(): Promise<{ state: string; ms: number }> {
   if (!res.ok) throw new Error(`gh-workflow-${res.status}`);
   const { state } = (await res.json()) as { state: string };
   return { state, ms: Date.now() - t0 };
+}
+
+export type JobStep = { number: number; name: string; status: string; conclusion: string | null; started_at: string | null; completed_at: string | null };
+export type Job = { id: number; name: string; status: string; conclusion: string | null; started_at: string | null; completed_at: string | null; steps: JobStep[] };
+
+/** Jobs and their steps for one run (names, conclusions, timings). */
+export async function getJobs(runId: number): Promise<Job[]> {
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/runs/${runId}/jobs?per_page=20`);
+  if (!res.ok) throw new Error(`gh-jobs-${res.status}`);
+  const { jobs } = (await res.json()) as { jobs: Job[] };
+  return jobs.map(({ id, name, status, conclusion, started_at, completed_at, steps }) => ({ id, name, status, conclusion, started_at, completed_at, steps: (steps ?? []).map(({ number, name, status, conclusion, started_at, completed_at }) => ({ number, name, status, conclusion, started_at, completed_at })) }));
+}
+
+/**
+ * Last lines of a job's log, timestamps stripped. GitHub redirects to a short-lived log URL;
+ * fetch drops the Authorization header on that hop. Lines that look like credentials are masked.
+ */
+export async function getJobLogTail(jobId: number, lines = 160, step = /^##\[group\]Run (npx playwright test|case "\$SUITE")/): Promise<string[] | null> {
+  const res = await gh(`/repos/${OWNER}/${REPO}/actions/jobs/${jobId}/logs`, {}, 15_000);
+  if (!res.ok) return null;
+  const all = (await res.text())
+    .split('\n')
+    .map((l) => l.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s?/, '').replace(/\u001b\[[0-9;]*m/g, ''))
+    .map((l) => (/(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_|Bearer\s+\S{20,}|xox[abp]-)/.test(l) ? '[masked]' : l));
+  // Only the Playwright step's own output: from its "Run npx playwright test" group to the next step.
+  const start = all.findIndex((l) => step.test(l));
+  const section = start < 0 ? all : all.slice(start + 1, (() => { const n = all.findIndex((l, i) => i > start && /^##\[group\]Run |^Post job cleanup/.test(l)); return n < 0 ? all.length : n; })());
+  return section
+    .filter((l) => !/^##\[(end)?group\]/.test(l))
+    .filter((l, i, a) => l.trim() || (a[i - 1] ?? '').trim())
+    .slice(-lines);
 }

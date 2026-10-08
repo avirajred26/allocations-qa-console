@@ -12,6 +12,10 @@ on:
         description: Correlation ref from the QA console (optional; 8–32 chars)
         required: false
         type: string
+      environment:
+        description: Environment from dashboard/qa-environments.json (empty = the regression gate's)
+        required: false
+        type: string
 
 concurrency:
   group: qa-regression
@@ -27,7 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      BASE_URL: https://dashboard.allocations.com
       CI: "true"
       QA_PHASE: regression
       QA_SCOPE: full
@@ -40,6 +43,11 @@ jobs:
           fi
 
       - uses: actions/checkout@v4
+
+      # Target from dashboard/qa-environments.json. Fails if the chosen environment has no URL.
+      - name: Resolve environment
+        run: node scripts/qa-env.mjs "${{ inputs.environment || 'regression' }}" >> "$GITHUB_ENV"
+
 
       - uses: actions/setup-node@v4
         with:

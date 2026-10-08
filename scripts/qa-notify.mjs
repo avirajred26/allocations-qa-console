@@ -12,99 +12,10 @@
  */
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
 
-const ANSI = /\u001b\[[0-9;]*m/g;
-const clean = (s) => (s ?? '').replace(ANSI, '');
-
-export const CATEGORY = {
-  network: { label: 'Network / environment', short: 'NETWORK', role: 'platform', hint: 'Target unreachable or navigation timed out — check the environment before the code.' },
-  backend: { label: 'Backend / API', short: 'BACKEND', role: 'backend', hint: 'An HTTP status, header or request-level expectation was not met.' },
-  ui: { label: 'UI', short: 'UI', role: 'frontend', hint: 'An element was missing, hidden or rendered differently than expected.' },
-  timeout: { label: 'Timeout', short: 'TIMEOUT', role: 'qa', hint: 'The test ran out of time without a more specific signal.' },
-  test: { label: 'Test / assertion', short: 'TEST', role: 'qa', hint: 'Assertion failed without a UI or API signal; review the test first.' },
-};
-
-/** Request-level specs: a failure there is about the server's answer, not the page. */
-const REQUEST_LEVEL_SPEC = /(api|header|boundary|contract)[^/]*\.spec\.[jt]s$/i;
-
-/** Ordered rules: the first match wins. */
-export function classifyFailure({ file = '', message = '' }) {
-  const m = clean(message);
-  if (/net::ERR_|ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|socket hang up|NS_ERROR_|page\.goto: Timeout|navigation timeout/i.test(m)) return 'network';
-  if (REQUEST_LEVEL_SPEC.test(file)) return 'backend';
-  // An HTTP status compared in an assertion about an endpoint or a status (e.g. Expected: 200, Received: 401).
-  if (/(\/api\/|\bstatus\b)[\s\S]{0,300}\b(Expected|Received):\s*[1-5]\d\d\b/i.test(m)) return 'backend';
-  if (/status (code )?(of )?[45]\d\d\b|Failed to load resource|toBeOK|response\.(status|ok)|apiRequestContext|mutating request|\b5\d\d\b.*(error|status)/i.test(m)) return 'backend';
-  if (/locator|getBy(Role|Text|Label|Placeholder|TestId)|toBe(Visible|Hidden|Enabled|Disabled|InViewport|Checked)|toHave(Text|Value|Count|Attribute|Screenshot|Class|CSS)|element is not|overflow|tap target/i.test(m)) return 'ui';
-  if (/Test timeout of \d+ms exceeded|Timeout \d+ms exceeded/i.test(m)) return 'timeout';
-  return 'test';
-}
-
-/** Absolute runner path → path inside the uploaded artifact (playwright-report/ + test-results/). */
-export function artifactPath(p) {
-  if (!p) return null;
-  const s = p.replace(/\\/g, '/');
-  const i = s.search(/(^|\/)(test-results|playwright-report)\//);
-  return i < 0 ? null : s.slice(s[i] === '/' ? i + 1 : i);
-}
-
-function firstLine(msg) {
-  return clean(msg).split('\n').map((l) => l.trim()).find(Boolean)?.slice(0, 220) ?? '';
-}
-
-function evidenceOf(result) {
-  const pick = (name) => artifactPath(result?.attachments?.find((a) => a.name === name && a.path)?.path);
-  return { screenshot: pick('screenshot'), video: pick('video'), trace: pick('trace'), log: pick('error-context') };
-}
-
-/** Flattens results.json into totals, per-test rows and enriched failures. */
-export function buildReport(results) {
-  const tests = [];
-  const walk = (suite, parents = []) => {
-    for (const spec of suite.specs ?? []) {
-      for (const t of spec.tests) {
-        const final = t.results[t.results.length - 1] ?? {};
-        const firstBad = t.results.find((r) => r.status !== 'passed' && r.status !== 'skipped');
-        tests.push({
-          title: [...parents, spec.title].join(' › '),
-          file: spec.file,
-          line: spec.line,
-          project: t.projectName,
-          outcome: t.status, // expected | unexpected | flaky | skipped
-          durationMs: t.results.reduce((n, r) => n + (r.duration ?? 0), 0),
-          retries: Math.max(0, t.results.length - 1),
-          final,
-          firstBad,
-          annotations: [...(t.annotations ?? []), ...(final.annotations ?? [])],
-        });
-      }
-    }
-    // File-level suites carry the file name as title; nested suites are describe() blocks.
-    for (const child of suite.suites ?? []) walk(child, child.title && child.title !== child.file ? [...parents, child.title] : parents);
-  };
-  for (const s of results.suites ?? []) walk(s);
-
-  const s = results.stats ?? {};
-  const stats = { total: tests.length, passed: s.expected ?? 0, failed: s.unexpected ?? 0, flaky: s.flaky ?? 0, skipped: s.skipped ?? 0, durationMs: Math.round(s.duration ?? 0), startTime: s.startTime ?? null };
-
-  const toFailure = (t, attempt) => {
-    const message = attempt?.error?.message ?? attempt?.errors?.map((e) => e.message).join('\n') ?? '';
-    const category = classifyFailure({ file: t.file, message });
-    return {
-      title: t.title, file: t.file, line: t.line, project: t.project, retries: t.retries, durationMs: t.durationMs,
-      category, reason: firstLine(message),
-      detail: clean(message).split('\n').slice(0, 14).join('\n').slice(0, 1500),
-      evidence: evidenceOf(attempt),
-    };
-  };
-  const failures = tests.filter((t) => t.outcome === 'unexpected').map((t) => toFailure(t, t.final));
-  const flaky = tests.filter((t) => t.outcome === 'flaky').map((t) => toFailure(t, t.firstBad));
-  const byCategory = {};
-  for (const f of failures) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
-  const findings = tests.flatMap((t) => t.annotations.filter((a) => a.type === 'finding').map((a) => a.description)).filter((v, i, a) => v && a.indexOf(v) === i);
-  const slowest = [...tests].filter((t) => t.outcome !== 'skipped').sort((a, b) => b.durationMs - a.durationMs).slice(0, 3).map((t) => ({ title: t.title, project: t.project, durationMs: t.durationMs }));
-  return { stats, failures, flaky, byCategory, findings, slowest, globalErrors: (results.errors ?? []).map((e) => firstLine(e.message)) };
-}
+import { CATEGORY, classifyFailure, artifactPath, buildReport } from '../dashboard/lib/qa-report-core.mjs';
+export { CATEGORY, classifyFailure, artifactPath, buildReport };
 
 /* ---------- context, people, links ---------- */
 
@@ -120,8 +31,8 @@ export function resolvePeople(config, ctx, report) {
 const fmtDuration = (ms) => (ms >= 60_000 ? `${Math.floor(ms / 60_000)}m ${Math.round((ms % 60_000) / 1000)}s` : `${(ms / 1000).toFixed(1)}s`);
 
 export function links(ctx, f) {
-  const ev = (p) => (p && ctx.consoleUrl && ctx.runId ? `${ctx.consoleUrl}/api/evidence/${ctx.runId}/${p.split('/').map(encodeURIComponent).join('/')}` : null);
-  if (!f) return { run: ctx.runUrl, artifacts: ctx.runUrl ? `${ctx.runUrl}#artifacts` : null, pr: ctx.prUrl };
+  const ev = (p) => (p && ctx.consoleUrl && ctx.runId && ctx.evidenceViaConsole !== false ? `${ctx.consoleUrl}/api/evidence/${ctx.runId}/${p.split('/').map(encodeURIComponent).join('/')}` : null);
+  if (!f) return { run: ctx.runUrl, artifacts: ctx.runUrl ? (ctx.ci === 'azure' ? `${ctx.runUrl}&view=artifacts` : ctx.ci === 'github' || !ctx.ci ? `${ctx.runUrl}#artifacts` : ctx.runUrl) : null, pr: ctx.prUrl };
   const trace = ev(f.evidence.trace);
   return { screenshot: ev(f.evidence.screenshot), video: ev(f.evidence.video), trace: trace ? `https://trace.playwright.dev/?trace=${encodeURIComponent(trace)}` : null, log: ev(f.evidence.log) };
 }
@@ -144,7 +55,8 @@ export function renderMarkdown(ctx, report, people) {
   const s = report.stats;
   const who = people.author ? `@${people.author.github ?? people.author.name}` : '—';
   const out = [MARKER(ctx.phase), `### ${h.text}`, ''];
-  out.push(`${ctx.prNumber ? `**PR:** [#${ctx.prNumber}](${ctx.prUrl}) ${ctx.prTitle ? `— ${ctx.prTitle}` : ''} · ` : ''}**Author:** ${who} · **Commit:** \`${(ctx.sha ?? '').slice(0, 7)}\` · **Target:** ${ctx.target}`);
+  out.push(`${ctx.prNumber ? `**PR:** [#${ctx.prNumber}](${ctx.prUrl}) ${ctx.prTitle ? `— ${ctx.prTitle}` : ''} · ` : ''}**Author:** ${who} · **Commit:** \`${(ctx.sha ?? '').slice(0, 7)}\` · **Environment:** ${ctx.envLabel ?? 'Production'} (${ctx.target.replace(/^https?:\/\//, '')})`);
+  if (ctx.envNote) out.push('', `> ${ctx.envNote}`);
   out.push('', '| Total | Passed | Failed | Flaky | Skipped | Duration |', '|---:|---:|---:|---:|---:|---:|', `| ${s.total} | ${s.passed} | ${s.failed} | ${s.flaky} | ${s.skipped} | ${fmtDuration(s.durationMs)} |`, '');
   if (report.globalErrors.length) out.push(`> **Harness error:** ${report.globalErrors.join('; ')}`, '');
   if (report.failures.length) {
@@ -163,7 +75,7 @@ export function renderMarkdown(ctx, report, people) {
   if (report.flaky.length) out.push(`**Flaky (passed on retry):** ${report.flaky.map((f) => `${f.title} (${f.project}) — \`${f.reason}\``).join('; ')}`, '');
   if (report.findings.length) out.push(`**Findings:** ${report.findings.join('; ')}`, '');
   out.push(`**Slowest:** ${report.slowest.map((t) => `${t.title} (${t.project}) ${fmtDuration(t.durationMs)}`).join(' · ')}`, '');
-  out.push(`[GitHub run](${L.run}) · [Full report, traces & videos](${L.artifacts})${people.notify.length ? ` · cc ${people.notify.map((p) => (p.github ? `@${p.github}` : p.name)).join(' ')}` : ''}`);
+  out.push(`[${ctx.ciLabel ?? 'CI'} run](${L.run}) · [Full report, traces & videos](${L.artifacts})${people.notify.length ? ` · cc ${people.notify.map((p) => (p.github ? `@${p.github}` : p.name)).join(' ')}` : ''}`);
   return out.join('\n');
 }
 
@@ -176,7 +88,7 @@ export function renderSlack(ctx, report, people) {
   const s = report.stats;
   const blocks = [
     { type: 'header', text: { type: 'plain_text', text: h.text, emoji: true } },
-    { type: 'section', text: { type: 'mrkdwn', text: `${ctx.prNumber ? `*<${ctx.prUrl}|#${ctx.prNumber}${ctx.prTitle ? ` ${slackEsc(ctx.prTitle)}` : ''}>*\n` : ''}Author ${slackMention(people.author)} · \`${(ctx.sha ?? '').slice(0, 7)}\` · ${slackEsc(ctx.target)} · <${L.run}|GitHub run>` } },
+    { type: 'section', text: { type: 'mrkdwn', text: `${ctx.prNumber ? `*<${ctx.prUrl}|#${ctx.prNumber}${ctx.prTitle ? ` ${slackEsc(ctx.prTitle)}` : ''}>*\n` : ''}Author ${slackMention(people.author)} · \`${(ctx.sha ?? '').slice(0, 7)}\` · ${slackEsc(ctx.envLabel ?? 'Production')} · <${L.run}|CI run>` } },
     { type: 'section', fields: [
       ['Passed', `${s.passed}/${s.total}`], ['Failed', String(s.failed)], ['Flaky', String(s.flaky)], ['Skipped', String(s.skipped)], ['Duration', fmtDuration(s.durationMs)], ['Phase', h.phase],
     ].map(([k, v]) => ({ type: 'mrkdwn', text: `*${k}*\n${v}` })) },
@@ -207,7 +119,7 @@ export function renderTeams(ctx, report, people) {
   const tag = (p) => (p?.teams ? `<at>${p.name}</at>` : p?.name ?? '—');
   const body = [
     { type: 'TextBlock', size: 'Large', weight: 'Bolder', text: h.text, color: h.ok ? 'Good' : 'Attention', wrap: true },
-    { type: 'TextBlock', wrap: true, spacing: 'Small', text: `${ctx.prNumber ? `[#${ctx.prNumber}${ctx.prTitle ? ` ${ctx.prTitle}` : ''}](${ctx.prUrl}) · ` : ''}Author ${tag(people.author)} · \`${(ctx.sha ?? '').slice(0, 7)}\` · ${ctx.target}` },
+    { type: 'TextBlock', wrap: true, spacing: 'Small', text: `${ctx.prNumber ? `[#${ctx.prNumber}${ctx.prTitle ? ` ${ctx.prTitle}` : ''}](${ctx.prUrl}) · ` : ''}Author ${tag(people.author)} · \`${(ctx.sha ?? '').slice(0, 7)}\` · ${ctx.envLabel ?? 'Production'}` },
     { type: 'FactSet', facts: [['Passed', `${s.passed}/${s.total}`], ['Failed', String(s.failed)], ['Flaky', String(s.flaky)], ['Skipped', String(s.skipped)], ['Duration', fmtDuration(s.durationMs)], ['Phase', h.phase]].map(([title, value]) => ({ title, value })) },
   ];
   if (report.failures.length) {
@@ -231,6 +143,37 @@ export function renderTeams(ctx, report, people) {
         msteams: { width: 'Full', entities: mentioned.map((p) => ({ type: 'mention', text: `<at>${p.name}</at>`, mentioned: { id: p.teams, name: p.name } })) },
       },
     }],
+  };
+}
+
+/* ---------- CI context ---------- */
+
+/**
+ * Run identity from whichever CI is running this. QA_* variables override anything detected,
+ * so any other system can call this script by exporting them.
+ */
+export function ciContext(env) {
+  const pick = (...keys) => keys.map((k) => env[k]).find((v) => v !== undefined && v !== '') ?? null;
+  let c;
+  if (env.GITHUB_ACTIONS === 'true') {
+    const server = env.GITHUB_SERVER_URL ?? 'https://github.com';
+    c = { ci: 'github', ciLabel: 'GitHub Actions', runId: env.GITHUB_RUN_ID, runUrl: `${server}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`, repo: env.GITHUB_REPOSITORY, sha: pick('HEAD_SHA', 'GITHUB_SHA'), prNumber: pick('PR_NUMBER'), prUrl: pick('PR_URL'), prTitle: pick('PR_TITLE') ?? '', author: pick('PR_AUTHOR', 'GITHUB_ACTOR'), token: env.GITHUB_TOKEN };
+  } else if (env.TF_BUILD === 'True') {
+    const base = `${env.SYSTEM_COLLECTIONURI ?? ''}${encodeURIComponent(env.SYSTEM_TEAMPROJECT ?? '')}`;
+    c = { ci: 'azure', ciLabel: 'Azure DevOps', runId: env.BUILD_BUILDID, runUrl: `${base}/_build/results?buildId=${env.BUILD_BUILDID}`, repo: env.BUILD_REPOSITORY_NAME, sha: pick('BUILD_SOURCEVERSION'), prNumber: pick('SYSTEM_PULLREQUEST_PULLREQUESTNUMBER', 'SYSTEM_PULLREQUEST_PULLREQUESTID'), prUrl: null, prTitle: '', author: pick('BUILD_REQUESTEDFOR') };
+  } else if (env.GITLAB_CI === 'true') {
+    c = { ci: 'gitlab', ciLabel: 'GitLab CI', runId: env.CI_PIPELINE_ID, runUrl: env.CI_PIPELINE_URL, repo: env.CI_PROJECT_PATH, sha: env.CI_COMMIT_SHA, prNumber: pick('CI_MERGE_REQUEST_IID'), prUrl: null, prTitle: pick('CI_MERGE_REQUEST_TITLE') ?? '', author: pick('GITLAB_USER_LOGIN') };
+  } else if (env.JENKINS_URL) {
+    c = { ci: 'jenkins', ciLabel: 'Jenkins', runId: env.BUILD_NUMBER, runUrl: env.BUILD_URL, repo: env.JOB_NAME, sha: pick('GIT_COMMIT'), prNumber: pick('CHANGE_ID'), prUrl: pick('CHANGE_URL'), prTitle: pick('CHANGE_TITLE') ?? '', author: pick('CHANGE_AUTHOR') };
+  } else {
+    c = { ci: 'local', ciLabel: 'Local', runId: null, runUrl: null, repo: null, sha: null, prNumber: null, prUrl: null, prTitle: '', author: null };
+  }
+  return {
+    ...c,
+    phase: env.QA_PHASE ?? 'manual',
+    runUrl: pick('QA_RUN_URL') ?? c.runUrl, prNumber: pick('QA_PR_NUMBER') ?? c.prNumber, prUrl: pick('QA_PR_URL') ?? c.prUrl, author: pick('QA_AUTHOR') ?? c.author,
+    // The console serves evidence only from GitHub artifacts; elsewhere it lives in the CI run itself.
+    evidenceViaConsole: c.ci === 'github',
   };
 }
 
@@ -262,14 +205,7 @@ async function upsertPrComment(ctx, markdown) {
 async function main() {
   const env = process.env;
   const config = existsSync(env.QA_CONFIG ?? '.github/qa-notify.json') ? JSON.parse(readFileSync(env.QA_CONFIG ?? '.github/qa-notify.json', 'utf8')) : {};
-  const server = env.GITHUB_SERVER_URL ?? 'https://github.com';
-  const ctx = {
-    phase: env.QA_PHASE ?? 'manual',
-    prNumber: env.PR_NUMBER || null, prTitle: env.PR_TITLE || '', prUrl: env.PR_URL || null, author: env.PR_AUTHOR || env.GITHUB_ACTOR || null,
-    sha: env.HEAD_SHA ?? env.GITHUB_SHA ?? '', repo: env.GITHUB_REPOSITORY, runId: env.GITHUB_RUN_ID,
-    runUrl: `${server}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
-    target: env.BASE_URL ?? 'https://dashboard.allocations.com', consoleUrl: (env.CONSOLE_URL || config.consoleUrl || '').replace(/\/$/, ''), token: env.GITHUB_TOKEN,
-  };
+  const ctx = { ...ciContext(env), target: env.BASE_URL ?? 'https://dashboard.allocations.com', env: env.QA_ENV ?? null, envLabel: env.QA_ENV_LABEL ?? null, envNote: env.QA_ENV_NOTE ?? null, consoleUrl: (env.CONSOLE_URL || config.consoleUrl || '').replace(/\/$/, '') };
   const path = env.RESULTS_PATH ?? 'test-results/results.json';
   const raw = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
   const report = raw
@@ -282,10 +218,13 @@ async function main() {
   // Read by the console (run history + run report pages). `stats` keeps Playwright's own field names.
   writeFileSync('qa-summary.json', JSON.stringify({ run_ref: env.RUN_REF ?? null, suite: env.SUITE ?? null, scope: ctx.phase === 'drill' ? 'drill' : env.QA_SCOPE ?? 'full', phase: ctx.phase, stats: raw?.stats ?? null, ctx: publicCtx, report }));
   if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `${md}\n`);
+  // Same report as a file for any CI; Azure DevOps shows it as a tab on the build summary.
+  writeFileSync('qa-report.md', `${md}\n`);
+  if (ctx.ci === 'azure') console.log(`##vso[task.uploadsummary]${resolve('qa-report.md')}`);
   const notifyOn = config.notify?.[ctx.phase] ?? 'always';
   const shouldNotify = notifyOn === 'always' || (notifyOn === 'failure' && !headline(ctx, report).ok);
   await Promise.all([
-    ctx.prNumber && ctx.token ? upsertPrComment(ctx, md) : null,
+    ctx.ci === 'github' && ctx.prNumber && ctx.token ? upsertPrComment(ctx, md) : null,
     shouldNotify && env.SLACK_WEBHOOK_URL ? post(env.SLACK_WEBHOOK_URL, renderSlack(ctx, report, people), 'Slack') : null,
     shouldNotify && env.TEAMS_WEBHOOK_URL ? post(env.TEAMS_WEBHOOK_URL, renderTeams(ctx, report, people), 'Teams') : null,
   ]);

@@ -1,0 +1,20 @@
+export type Cause = 'network' | 'backend' | 'ui' | 'timeout' | 'test';
+export const CATEGORY: Record<Cause, { label: string; short: string; role: string; hint: string }>;
+export function classifyFailure(input: { file?: string; message?: string }): Cause;
+export function artifactPath(p: string | null | undefined): string | null;
+export function clean(s: string | null | undefined): string;
+export function firstLine(msg: string | null | undefined): string;
+export type Evidence = { screenshot: string | null; video: string | null; trace: string | null; log: string | null };
+export type BuiltFailure = { title: string; file: string; line: number; project: string; retries: number; durationMs: number; category: Cause; reason: string; detail: string; evidence: Evidence };
+export type BuiltTest = { title: string; file: string; line: number; project: string; outcome: 'expected' | 'unexpected' | 'flaky' | 'skipped'; status: string; durationMs: number; retries: number; annotations: { type: string; description: string }[] };
+export type BuiltReport = {
+  stats: { total: number; passed: number; failed: number; flaky: number; skipped: number; durationMs: number; startTime: string | null };
+  tests: BuiltTest[];
+  failures: BuiltFailure[];
+  flaky: BuiltFailure[];
+  byCategory: Partial<Record<Cause, number>>;
+  findings: string[];
+  slowest: { title: string; project: string; durationMs: number }[];
+  globalErrors: string[];
+};
+export function buildReport(results: unknown): BuiltReport;

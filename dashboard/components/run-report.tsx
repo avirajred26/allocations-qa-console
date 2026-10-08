@@ -1,11 +1,12 @@
 'use client';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { ArrowLeftIcon, ArrowUpRightIcon, FileTextIcon, FilmIcon, ImageIcon, ScanSearchIcon } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeftIcon, ArrowUpRightIcon, CheckIcon, CircleDashedIcon, FileTextIcon, FilmIcon, ImageIcon, ScanSearchIcon, TerminalIcon, XIcon } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { ConclusionBadge, ProvenanceBadge } from '@/components/status-badges';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PHASE_LABEL, type ReportFailure } from '@/lib/qa-types';
+import { PHASE_LABEL, type ReportFailure, type ReportTest } from '@/lib/qa-types';
 import type { RunReport } from '@/lib/ci-history';
 import { cn } from '@/lib/utils';
 
@@ -63,6 +64,68 @@ function FailureCard({ runId, f, flaky }: { runId: string; f: ReportFailure; fla
   );
 }
 
+const OUTCOME: Record<ReportTest['outcome'], { label: string; cls: string }> = {
+  expected: { label: 'PASS', cls: 'bg-success/15 text-success' },
+  unexpected: { label: 'FAIL', cls: 'bg-destructive/15 text-destructive' },
+  flaky: { label: 'FLAKY', cls: 'bg-warning/15 text-warning' },
+  skipped: { label: 'SKIP', cls: 'bg-muted text-muted-foreground' },
+};
+
+function AllTests({ tests }: { tests: ReportTest[] }) {
+  const [filter, setFilter] = useState<'all' | ReportTest['outcome']>('all');
+  const shown = tests.filter((t) => filter === 'all' || t.outcome === filter);
+  return (
+    <section className="overflow-hidden rounded-lg border bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3.5">
+        <h2 className="text-sm font-semibold">All tests <span className="qa-count">{tests.length}</span></h2>
+        <div className="flex rounded-md border p-0.5 text-[11px]" role="tablist" aria-label="Filter tests">
+          {(['all', 'expected', 'unexpected', 'flaky', 'skipped'] as const).map((k) => (
+            <button key={k} role="tab" aria-selected={filter === k} onClick={() => setFilter(k)} className={cn('rounded px-2.5 py-1 transition', filter === k ? 'bg-muted font-medium' : 'text-muted-foreground hover:text-foreground')}>
+              {k === 'all' ? 'All' : OUTCOME[k].label.toLowerCase()} {k !== 'all' && <span className="font-mono">{tests.filter((t) => t.outcome === k).length}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="overflow-x-auto"><table className="qa-table min-w-[760px]"><thead><tr><th className="w-[48%]">Test</th><th>Result</th><th>Device</th><th>Duration</th><th>Retries</th><th>Notes</th></tr></thead><tbody>
+        {shown.map((t, i) => (
+          <tr key={`${t.title}-${t.project}-${i}`}>
+            <td><p className="text-[13px]">{t.title}</p><p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{t.file}:{t.line}</p></td>
+            <td><span className={cn('rounded px-1.5 py-0.5 font-mono text-[10px]', OUTCOME[t.outcome].cls)}>{OUTCOME[t.outcome].label}</span></td>
+            <td className="font-mono text-[11px] text-muted-foreground">{t.project}</td>
+            <td className="font-mono text-[11px]">{t.outcome === 'skipped' ? '—' : fmt(t.durationMs)}</td>
+            <td className="font-mono text-[11px]">{t.retries || '—'}</td>
+            <td className="max-w-72 text-[11px] text-muted-foreground">{t.annotations.map((a) => `${a.type}: ${a.description}`).join(' · ') || '—'}</td>
+          </tr>
+        ))}
+      </tbody></table></div>
+    </section>
+  );
+}
+
+const stepSecs = (a: string | null, b: string | null) => (a && b ? Math.max(0, Math.round((Date.parse(b) - Date.parse(a)) / 1000)) : null);
+
+function Pipeline({ jobs }: { jobs: RunReport['jobs'] }) {
+  return (
+    <section className="overflow-hidden rounded-lg border bg-card">
+      <div className="border-b px-5 py-3.5"><h2 className="text-sm font-semibold">Pipeline steps</h2><p className="mt-1 text-xs text-muted-foreground">Every step of the CI job, with its result and time.</p></div>
+      {jobs.map((j) => (
+        <div key={j.id} className="px-5 py-4">
+          <p className="mb-3 text-xs font-medium">{j.name} <span className="ml-2 font-mono text-[10px] text-muted-foreground">{stepSecs(j.started_at, j.completed_at) ?? '—'}s</span></p>
+          <ol className="space-y-1.5">
+            {j.steps.map((st) => (
+              <li key={st.number} className="flex items-center gap-3 text-[12px]">
+                {st.conclusion === 'success' ? <CheckIcon className="size-3.5 text-success" aria-label="passed" /> : st.conclusion === 'failure' ? <XIcon className="size-3.5 text-destructive" aria-label="failed" /> : <CircleDashedIcon className="size-3.5 text-muted-foreground" aria-label={st.conclusion ?? st.status} />}
+                <span className={cn('flex-1', st.conclusion === 'failure' && 'text-destructive', st.conclusion === 'skipped' && 'text-muted-foreground')}>{st.name}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{st.conclusion === 'skipped' ? 'skipped' : `${stepSecs(st.started_at, st.completed_at) ?? '—'}s`}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 export function RunReportView({ runId }: { runId: string }) {
   const { data: r, error, isLoading } = useSWR<RunReport>(`/api/report/${runId}`, getJson, {
     refreshInterval: (d) => (d && d.status !== 'completed' ? 15_000 : 0),
@@ -90,6 +153,7 @@ export function RunReportView({ runId }: { runId: string }) {
             {r.ctx?.author && <span><span className="text-muted-foreground">Author</span> @{r.ctx.author}</span>}
             {r.ctx?.sha && <span className="font-mono"><span className="font-sans text-muted-foreground">Commit</span> {r.ctx.sha.slice(0, 7)}</span>}
             <span><span className="text-muted-foreground">Branch</span> {r.branch}</span>
+            <span><span className="text-muted-foreground">Environment</span> {r.ctx?.envLabel ?? 'Production'}</span>
             <span><span className="text-muted-foreground">Target</span> {r.ctx?.target?.replace(/^https?:\/\//, '') ?? 'dashboard.allocations.com'}</span>
             <ProvenanceBadge kind="live" className="ml-auto" />
           </div>
@@ -109,10 +173,23 @@ export function RunReportView({ runId }: { runId: string }) {
           )}
           {rep && rep.flaky.length > 0 && <section className="space-y-4"><h2 className="text-sm font-semibold">Flaky (passed on retry)</h2>{rep.flaky.map((f, i) => <FailureCard key={`${f.title}-${i}`} runId={runId} f={f} flaky />)}</section>}
           {rep && rep.failures.length === 0 && rep.flaky.length === 0 && stats && <div className="qa-panel text-sm"><span className="font-medium text-success">All executed checks passed.</span> <span className="text-muted-foreground">{stats.skipped ? `${stats.skipped} skipped by design.` : ''}</span></div>}
+          {r.ctx?.envNote && <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-xs text-warning">{r.ctx.envNote}</div>}
+          {rep?.tests && rep.tests.length > 0 && <AllTests tests={rep.tests} />}
           {rep && (rep.findings.length > 0 || rep.slowest.length > 0) && (
             <div className="grid gap-5 md:grid-cols-2">
               {rep.findings.length > 0 && <section className="qa-panel"><h2 className="text-sm font-semibold">Findings</h2><ul className="mt-3 space-y-2 text-xs leading-5 text-muted-foreground">{rep.findings.map((x) => <li key={x}>{x}</li>)}</ul></section>}
               <section className="qa-panel"><h2 className="text-sm font-semibold">Slowest checks</h2><ul className="mt-3 space-y-2 font-mono text-[11px]">{rep.slowest.map((t) => <li key={t.title + t.project} className="flex justify-between gap-3"><span className="truncate text-muted-foreground">{t.title} · {t.project}</span><span>{fmt(t.durationMs)}</span></li>)}</ul></section>
+            </div>
+          )}
+          {r.jobs.length > 0 && (
+            <div className="grid gap-5 xl:grid-cols-[1fr_1.4fr]">
+              <Pipeline jobs={r.jobs} />
+              {r.log && (
+                <section className="flex min-w-0 flex-col overflow-hidden rounded-lg border bg-card">
+                  <div className="border-b px-5 py-3.5"><h2 className="flex items-center gap-2 text-sm font-semibold"><TerminalIcon className="size-4 text-primary" aria-hidden />Playwright output</h2><p className="mt-1 text-xs text-muted-foreground">{r.log.job} · {r.log.step} · last {r.log.lines.length} lines, timestamps stripped</p></div>
+                  <pre className="max-h-[520px] flex-1 overflow-auto bg-muted/30 p-4 font-mono text-[11px] leading-5 whitespace-pre-wrap">{r.log.lines.join('\n')}</pre>
+                </section>
+              )}
             </div>
           )}
         </>
