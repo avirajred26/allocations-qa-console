@@ -43,11 +43,11 @@ const SCOPE_OPTIONS: { value: Scope; label: string }[] = [
   { value: 'ui', label: 'UI only' },
 ];
 
-type Session = { active: boolean; expiresAt: number | null };
+type Session = { keyRequired?: boolean; active: boolean; expiresAt: number | null };
 const SESSION_KEY = '/api/session';
 const getSession = async (url: string): Promise<Session> => {
   const res = await fetch(url, { cache: 'no-store' });
-  return res.ok ? res.json() : { active: false, expiresAt: null };
+  return res.ok ? res.json() : { keyRequired: false, active: false, expiresAt: null };
 };
 
 const FALLBACK: Record<number, string> = {
@@ -84,6 +84,8 @@ export function TriggerDialog({
   // HttpOnly session cookie set by /api/trigger after one valid key; the key itself is never stored.
   const { data: session } = useSWR<Session>(open ? SESSION_KEY : null, getSession, { revalidateOnFocus: false });
   const remembered = !!session?.active;
+  // Open mode (default): no key; the server's rate limits are the guard.
+  const needsKey = session?.keyRequired === true;
   // The demo key lives only in this component's memory and is cleared on submit and on close.
   const [demoKey, setDemoKey] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +101,7 @@ export function TriggerDialog({
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (submitting || block || (!demoKey && !remembered)) return;
+    if (submitting || block || (needsKey && !demoKey && !remembered)) return;
     const key = demoKey;
     setDemoKey('');
     setError(null);
@@ -263,7 +265,9 @@ export function TriggerDialog({
               </FieldSet>
             )}
 
-            {remembered ? (
+            {!needsKey ? (
+              <p className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground"><KeyRoundIcon className="size-3.5" aria-hidden />Open demo trigger, no key needed · 30 s cooldown · 20 runs a day · 5 per browser</p>
+            ) : remembered ? (
               <div className="flex items-center justify-between gap-3 rounded-lg border border-success/25 bg-success/5 px-3 py-2.5 text-xs">
                 <span className="flex items-center gap-2"><KeyRoundIcon className="size-3.5 text-success" aria-hidden />Demo key remembered on this browser until {new Date(session!.expiresAt!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 <button type="button" onClick={forget} className="text-primary underline-offset-2 hover:underline">Forget</button>
@@ -311,7 +315,7 @@ export function TriggerDialog({
 
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="ghost" />}>Cancel</DialogClose>
-            <Button type="submit" disabled={submitting || blocked || (demoKey.length === 0 && !remembered)}>
+            <Button type="submit" disabled={submitting || blocked || (needsKey && demoKey.length === 0 && !remembered)}>
               {submitting ? <Spinner data-icon="inline-start" /> : <PlayIcon data-icon="inline-start" />}
               {submitting ? 'Starting…' : 'Start'}
             </Button>

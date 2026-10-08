@@ -68,3 +68,26 @@ export function sessionCookieHeader(req: Request, value: string, maxAge: number)
   const secure = new URL(req.url).protocol === 'https:' ? '; Secure' : '';
   return `${SESSION_COOKIE}=${value}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
 }
+
+/** Open mode (default): no demo key; rate limits are the guard. TRIGGER_REQUIRE_KEY=1 restores the key. */
+export function keyRequired(): boolean {
+  return process.env.TRIGGER_REQUIRE_KEY === '1';
+}
+
+/** Hashed client identity for the per-visitor cap (first X-Forwarded-For hop, as set by Vercel). */
+export function visitorId(req: Request): string {
+  const testVisitor = process.env.ALLOW_TEST_NAMESPACE === '1' ? req.headers.get('x-test-visitor') : null;
+  const ip = testVisitor ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
+  return createHash('sha256').update(`qa-visitor.v1.${ip}`).digest('hex').slice(0, 20);
+}
+
+/** Open mode only accepts runs started from this console's own pages (blocks cross-site posts). */
+export function sameOrigin(req: Request): boolean {
+  const origin = req.headers.get('origin');
+  if (!origin) return req.headers.get('sec-fetch-site') === 'same-origin';
+  try {
+    return new URL(origin).host === (req.headers.get('x-forwarded-host') ?? req.headers.get('host'));
+  } catch {
+    return false;
+  }
+}
