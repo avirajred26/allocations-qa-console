@@ -150,7 +150,7 @@ export function TriggerDialog({
       }
       if (res.status >= 500) toast.error(message);
     } catch {
-      setError('Network error — the request may not have reached the server. Check the Runs page and quota before retrying.');
+      setError('Network error. The request may not have reached the server. Check the Runs page and quota before retrying.');
       void mutate(QUOTA_KEY);
     } finally {
       setSubmitting(false);
@@ -324,7 +324,7 @@ export function blockText(block: TriggerBlock): string {
     case 'daily-limit':
       return 'Daily trigger limit reached. Resets at 00:00 UTC.';
     case 'cooldown':
-      return `Cooldown active — try again in ${block.seconds}s.`;
+      return `Wait ${block.seconds}s before the next run.`;
     default:
       return '';
   }

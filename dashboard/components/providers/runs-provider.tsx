@@ -2,11 +2,13 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import {
   NOT_FOUND_DEADLINE_MS,
   POLL_INTERVAL_MS,
   RUN_REF_PATTERN,
   safeGithubUrl,
+  githubRunId,
   type Dispatch,
   type RunConclusion,
   type SessionRun,
@@ -66,19 +68,13 @@ function toStored(runs: SessionRun[]) {
 }
 
 function RunLinks({ run }: { run: SessionRun }) {
-  if (!run.html_url && !run.artifacts_url) return null;
+  const id = githubRunId(run.html_url);
+  if (!id) return null;
   return (
     <span className="mt-1 flex gap-3">
-      {run.html_url && (
-        <a className="underline underline-offset-2" href={run.html_url} target="_blank" rel="noopener noreferrer">
-          GitHub run
-        </a>
-      )}
-      {run.artifacts_url && (
-        <a className="underline underline-offset-2" href={run.artifacts_url} target="_blank" rel="noopener noreferrer">
-          Artifacts
-        </a>
-      )}
+      <Link className="underline underline-offset-2" href={`/runs/gh/${id}`}>
+        Open report
+      </Link>
     </span>
   );
 }

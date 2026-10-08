@@ -1,147 +1,64 @@
 # Allocations QA Console
 
-Independent Lead QA assignment for dashboard.allocations.com. Not an official Allocations product. This package combines the original Playwright harness and GitHub workflow with the completed v0-derived dashboard, including the latest local redesign (7 October 2026).
+QA assignment for [dashboard.allocations.com](https://dashboard.allocations.com) by Aviraj Lall. Not an official Allocations product.
 
-**Live console: https://aviraj-allocations-qa.vercel.app** — Live trigger configured and open for the demo (no key): same-origin only, 30 s cooldown, 20 runs a day overall and 5 per browser. Set `TRIGGER_REQUIRE_KEY=1` in Vercel to require the demo key again. No credentials are included in this repo.
+- **Live console:** https://aviraj-allocations-qa.vercel.app
+- **Built with v0:** [v0 chat "Build Lead QA tool"](https://v0.app/avirajlall26-2389/chat/build-lead-qa-tool-qVMTjJgaNwZ) (brief in `dashboard/V0_PROMPT.md`), then extended in code.
 
-**Built with v0.dev:** the console's first version was generated in v0 from `dashboard/V0_PROMPT.md` — [v0 chat “Build Lead QA tool”](https://v0.app/avirajlall26-2389/chat/build-lead-qa-tool-qVMTjJgaNwZ). It was then deployed on Vercel and extended in code: the Playwright harness, GitHub Actions gates (pre-merge, post-merge, weekly regression), the trigger backend (Redis quota, demo-key session), live run history and run reports, and the QA/QC process page.
+## What it does
 
-## Harness status (7 October 2026)
+- Playwright checks on the public sign-in page, on desktop Chrome and iPhone 13 (WebKit): sign-in page loads, email validation, anonymous API returns 401, security headers, mobile layout.
+- Tests are read-only on production: the sign-in tests block every POST/PUT/DELETE except the app's own session refresh.
+- The console shows the release status (GO / CONDITIONAL / NO-GO), run history, a report for every run (failures with screenshot, recording, trace and log), live environment checks, and the QA/QC process.
+- **Trigger run** starts a GitHub Actions run from the console. No key needed for the demo: 30 s between runs, 20 runs a day, 5 per browser. Set `TRIGGER_REQUIRE_KEY=1` in Vercel to require a demo key again.
 
-The 6 Oct CI run failed 7/14 because the harness assumed a password form. The real sign-in is
-passwordless (email code + passkey) and POSTs `/api/auth/refresh` on startup; the fail-closed guard was
-aborting that and freezing the page. Corrected harness, run locally against the live surface:
-**13 passed, 0 failed, 1 by-design skip** (SM-005 is mobile-only and skips on the desktop project).
+## When tests run
 
-Replaced checks: SM-003 is now the anonymous API boundary (`/api/auth/me` → 401, no user data) and
-SM-004 is security headers (HSTS ≥ 6 months, nosniff, frame protection, CSP). Both pass.
+| Trigger | Workflow | Tests |
+|---|---|---|
+| PR opened or updated | `qa-pr.yml` | API checks; a failure blocks the merge |
+| Merged to `main` | `qa-pr.yml` | UI + API |
+| Mondays 03:00 UTC | `qa-regression.yml` | Whole suite, each check 3× |
+| Every 6 hours | `qa-run.yml` | Whole suite |
+| Trigger run (console) | `qa-run.yml` / `qa-regression.yml` | You pick environment, suite and scope; "Failure drill" runs two tests that fail on purpose |
 
-One product finding surfaced, recorded as a Playwright annotation (not a failure):
-**PRE-002** — the sign-in validation message is plain text with no `aria-invalid` / `aria-describedby`
-on the input; assistive technology is not told the field is in error.
+Each run posts a report as a PR comment, in the job summary and in the console. Slack and Teams are optional (`SLACK_WEBHOOK_URL`, `TEAMS_WEBHOOK_URL` secrets).
 
-Re-run in GitHub Actions on 7 Oct as `ci-corrected-01` ([run 37567120072](https://github.com/avirajred26/allocations-qa-console/actions/runs/37567120072)): **13 passed, 0 failed, 1 by-design skip**. That report is the recorded CI result in the dashboard.
+## Environments and other CI
 
-## Start the dashboard
+`dashboard/qa-environments.json` lists dev, staging and prod. Only the production URL exists for this assignment, so dev and staging point at it and every report marks them as demo aliases.
+
+`scripts/qa-ci.sh` runs the same flow on any CI (set `QA_PHASE`, optionally `QA_ENV` and `QA_SCOPE`). `azure-pipelines.yml` is a ready-to-import Azure DevOps version; I haven't run it in an Azure org.
+
+## Real vs sample data
+
+- **Real:** pre-auth test results, run history, run reports and evidence (from GitHub Actions), live environment checks.
+- **Sample (marked FIXTURE / MOCK):** scenario history, and logged-in flows like SPV formation, KYC, capital calls and distributions, because they need Allocations accounts.
+
+One real finding: **PRE-002**, the sign-in error message isn't linked to the email field (`aria-invalid` / `aria-describedby` missing), so screen readers don't announce it.
+
+## Run it locally
 
 ```sh
+npm ci && npx playwright install chromium webkit
+npm test                       # harness against production
+npm run test:unit              # reporter and environment tests
+
 cd dashboard
 pnpm install --frozen-lockfile
-pnpm dev --hostname 127.0.0.1 --port 3000
+pnpm dev                       # http://localhost:3000
+pnpm typecheck && pnpm build
 ```
 
-Open http://127.0.0.1:3000. No environment file is required to explore the UI, fixtures, or recorded CI report. Live triggering remains blocked without its backend credentials.
+The console needs `GH_TOKEN`, `GH_OWNER`, `GH_REPO`, `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (see `dashboard/.env.example`). No credentials are in this repo.
 
-The local preview was verified on Node 24.15.0 and pnpm 11.19.0 with the included pnpm lockfile. The root harness is a separate npm package with its own package-lock.json. Do not use the old dashboard npm lockfile from a previous archive; this updated dashboard uses pnpm.
-
-Production preview and local logic checks:
-
-```sh
-pnpm typecheck
-pnpm exec playwright test tests/readiness.spec.ts tests/execution-records.spec.ts
-pnpm build
-pnpm start --hostname 127.0.0.1 --port 3000
-```
-
-Run only one server on port 3000. Stop the dev server before starting the production preview. Rebuild after editing source if using `pnpm start`.
-
-## Included functionality
-
-- Release readiness, sample outcome distribution, outstanding risks and Slack-copy dialog.
-- Light/dark theme switch; preference persists in localStorage.
-- Grouped navigation, breadcrumbs and workspace search (Cmd/Ctrl + K).
-- Searchable run table, source tabs, status filters, sorting and dedicated run investigation pages.
-- Actual recorded CI detail at `/runs/ci-37567120072` (run_ref `ci-corrected-01`): 14 test cases, final-attempt durations, retries, failure messages, skip reasons and original artifact link.
-- Live run history (`/api/history`): every `qa-run.yml` run on `main` from the GitHub API, with pass/fail/skip totals read from each run's own artifact (`qa-summary-*`, falling back to `results.json` in the report) and cached in Redis. The workflow also runs every 6 hours, so the trend reflects real runs between demos.
-- Live targets (`/api/targets`): one anonymous GET of the Allocations sign-in page (status, latency, the four SM-004 security headers), GitHub workflow state, Redis ping and this deployment's commit. CDN-cached for 60 s, so the product sees at most one probe a minute from the console.
-- Scenario library with device history, local triage editing, owner/priority/classification/ticket fields, quarantine and reset.
-- Harness coverage and connection-status explanations.
-- Trigger dialog and real server-side dispatch/status/quota implementation. The dialog shows missing setup and prevents dispatch when quota is unavailable.
-- Original root Playwright harness, fail-closed sign-in checks and `.github/workflows/qa-run.yml`.
-
-## PR quality gate (pre-merge and post-merge)
-
-| Trigger | Workflow | Scope (`QA_SCOPE`) |
-|---|---|---|
-| Pre-merge: every PR to `main` (open, push, reopen, ready for review) | `qa-pr.yml` | **API** — anonymous API boundary + security headers; fails the check so branch protection can block the merge |
-| Post-merge: every push to `main`, attributed to the merged PR | `qa-pr.yml` | **UI + API** — the full pre-auth suite |
-| Weekly regression: Mondays 03:00 UTC or on demand | `qa-regression.yml` | **Entire suite**, every spec old and new, each check repeated 3× |
-| Health check: every 6 h | `qa-run.yml` | Full suite |
-| Manual: console *Trigger run* | `qa-run.yml` | All / desktop / mobile, or **Failure drill** (`tests/drill`: two deliberate, read-only failures — one UI, one API — that prove the failure report) |
-
-API specs are recognised by filename (`*api*`, `*header*`, `*boundary*`, `*contract*`), so new specs join the right gate automatically. The full process — gates, triage, severity, roles — is documented in the console at `/process`. Every run's report is also a console page at `/runs/gh/<run id>` with inline screenshots and recordings.
-
-Each run posts **one report** to the PR (a sticky comment per phase), the job summary, and — when the secrets are set — Slack and Microsoft Teams:
-
-- PR number, title and link; author (@mentioned); commit; target; phase
-- total / passed / failed / flaky / skipped and duration; slowest checks
-- every failure with a **cause** (`UI`, `BACKEND`, `NETWORK`, `TIMEOUT`, `TEST`), the first error line and the full error text
-- links to that failure's **screenshot** (shown inline in Slack/Teams), **recording**, **trace** (opens in trace.playwright.dev) and **log** (`error-context.md`: error, page snapshot, test source), served by the console's `/api/evidence` route from the run's own artifact
-- stakeholders from `.github/qa-notify.json`: QA is always notified; frontend / backend / platform owners are added only when a failure of that cause appears
-
-Causes are a rule-based triage hint from the error text and spec type (`scripts/qa-notify.mjs`, tested against the real 6 Oct failing report), not a verdict.
-
-Setup: add repository secrets `SLACK_WEBHOOK_URL` (Slack incoming webhook) and/or `TEAMS_WEBHOOK_URL` (Teams Workflows webhook), and fill Slack member IDs / Teams emails in `.github/qa-notify.json`. Without them the PR comment and job summary still work.
-
-## Environments and CI/CD
-
-`dashboard/qa-environments.json` lists dev, staging and prod and maps each trigger to one (pre-merge / post-merge → staging; regression, health, manual → prod). It is read by `playwright.config.ts` (`QA_ENV`), every pipeline (`scripts/qa-env.mjs`) and the console's *Trigger run* environment picker. Only production's URL is known for this assignment, so **dev and staging are demo aliases** (`aliasOf: "prod"`) of the public production surface: they are selectable end to end, and every report and the console label them as aliases. Replace their `baseUrl` and remove `aliasOf` to point everything at real environments. A gate whose environment has no URL runs against the fallback and says so; an explicitly chosen environment without a URL fails.
-
-The harness is CI-agnostic: `scripts/qa-ci.sh` (with `QA_PHASE`, optional `QA_ENV` / `QA_SCOPE`) resolves the environment, runs Playwright and writes JUnit, the HTML report, evidence, `qa-report.md` and `qa-summary.json`. GitHub Actions is live; `azure-pipelines.yml` provides the same PR / main / weekly / manual triggers for Azure DevOps (syntax-checked, not run here). GitLab or Jenkins call the same script; the reporter reads their run, PR and author variables.
-
-## Evidence and limitations
-
-| Data | Provenance |
-| --- | --- |
-| Scenario library and release verdict | Seeded fixture + authenticated mocks, not production evidence. Initial verdict is NO-GO because INV-020 is a mocked failed blocker. |
-| Seven sample execution groups | Grouped from existing fixture history by reference, product flow and device. They are not GitHub workflows. |
-| Recorded CI | Imported static snapshot from the actual report artifact: 2 passed, 7 failed, 5 skipped. Started 2026-10-06 19:55 UTC (7 October in India). |
-| Recorded local run | Aggregate snapshot: 3 passed, 6 failed, 5 skipped. No per-test details imported for this entry. |
-| Live session runs | Real dispatch metadata, once configured. Workflow conclusions never manufacture scenario outcomes. |
-
-The first harness executions exposed incorrect password-form assumptions and a blocked startup refresh request on the actual email-code/passkey sign-in surface. These are harness failures, not verified product defects. Skips do not count as passes. Keep the no-credential-submission boundary while adapting the checks.
-
-Triage edits are in-memory, shared between the library/readiness/Slack copy, and lost on reload. Example issue keys are not synced to an issue tracker. Theme preference is stored in localStorage; non-sensitive live run metadata is stored in sessionStorage. No demo key is persisted.
-
-Verified for this package's source: dashboard typecheck, production build and seven logic/evidence-integrity tests. Desktop Chrome checks covered theme switching/persistence, run search, list-to-detail navigation, real error expansion and the blocked trigger dialog. Full mobile/all-interaction regression, scratch Redis integration tests and live dashboard dispatch are still pending.
-
-## Original harness
-
-From the repository root (not dashboard):
-
-```sh
-npm ci
-npx playwright install --with-deps chromium webkit
-npm test
-```
-
-These commands contact the actual public Allocations surface. They are not needed just to explore the local UI. The known harness failures above remain unresolved; do not present it as a green suite.
-
-## Connect live triggering later
-
-Use `dashboard/.env.example` as the environment-variable inventory. Configure these privately, never in client code or version control:
-
-- `GH_TOKEN`: fine-grained GitHub PAT, Actions read/write for this repository only.
-- `GH_OWNER`, `GH_REPO`, `GH_WORKFLOW`, `GH_BRANCH`: the fixed dispatch destination.
-- `DEMO_KEY_HASH`: SHA-256 hash of a privately generated demo key. Only share the original key privately with reviewers and rotate after review.
-- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: Upstash credentials.
-
-Restart the server after changing environment variables. Readable quota alone does not verify all integration credentials. Live Redis tests need a scratch database; the test instructions are in `dashboard/tests/admission.spec.ts` and `dashboard/tests/trigger.spec.ts`. All `ALLOW_TEST_NAMESPACE` and `TEST_*` seams are dev-only and must never be set on a public deployment.
-
-Admission validates the key before atomic Redis cooldown/daily-cap checks. Exact `run_ref` names correlate workflow dispatches. Definitive rejection can release the owner-checked slot; ambiguous dispatch is not refunded. No run is invented when confirmation times out.
-
-## Project layout
+## Layout
 
 ```text
-tests/preauth/                 Original five smoke specs and helpers
-.github/workflows/qa-run.yml   Real workflow_dispatch workflow
-fixtures/                     Original seeded history
-dashboard/app/                Console pages, run detail route and server API routes
-dashboard/components/         UI, providers, navigation, dialogs and run investigation
-dashboard/lib/                Auth, Redis, GitHub, readiness and evidence logic
-dashboard/fixtures/           Seeded history + sanitized recorded CI snapshot
-dashboard/tests/              Unit/evidence tests and scratch-Redis integration tests
-dashboard/V0_PROMPT.md         Historical v0 generation brief, not the current status
+tests/preauth/          Playwright checks
+tests/drill/            Failure drill (fails on purpose)
+scripts/                Reporter, environment resolver, CI entrypoint
+.github/workflows/      PR gate, regression, manual runs
+azure-pipelines.yml     Azure DevOps version
+dashboard/              Next.js console (pages, API routes, tests)
 ```
-
-The ZIP intentionally excludes dependencies, Next builds, Git metadata, raw videos/traces/screenshots and credentials. Install dependencies locally. The original CI artifact remains linked on GitHub and is subject to its retention policy.

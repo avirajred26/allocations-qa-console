@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: '%s · Allocations QA Console',
   },
   description:
-    'Independent assignment demo — an internal-style QA console for testing dashboard.allocations.com. Not an official Allocations product.',
+    'QA console for dashboard.allocations.com (assignment by Aviraj Lall). Not an official Allocations product.',
   robots: { index: false, follow: false },
 };
 

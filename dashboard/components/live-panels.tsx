@@ -39,9 +39,9 @@ export function RunHistory() {
     <section className="flex flex-col overflow-hidden rounded-lg border bg-card">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b px-5 py-3.5">
         <div>
-          <div className="flex items-center gap-2"><h2 className="text-sm font-semibold">Run history</h2><ProvenanceBadge kind="live" /></div>
+          <div className="flex items-center gap-2"><h2 className="text-sm font-semibold">Run history</h2></div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {runs.length ? <>{runs.length} QA runs · <span className="text-success">{Math.round((green / runs.length) * 100)}% green</span>{checks.run > 0 && <> · {((checks.pass / checks.run) * 100).toFixed(1)}% of executed checks passed</>}</> : 'Every QA run (PR gate, post-merge, regression, manual), read from the GitHub API'}
+            {runs.length ? <>{runs.length} QA runs · <span className="text-success">{Math.round((green / runs.length) * 100)}% green</span>{checks.run > 0 && <> · {((checks.pass / checks.run) * 100).toFixed(1)}% of executed checks passed</>}</> : 'All QA runs'}
           </p>
         </div>
         <div className="flex rounded-md border p-0.5 text-[11px]" role="tablist" aria-label="Chart metric">
@@ -81,7 +81,7 @@ export function RunHistory() {
       <LatestRuns />
       <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-2.5 text-[10px] text-muted-foreground">
         <div className="flex gap-4">{mode === 'checks' ? SEG.map(([k, c]) => <span key={k} className="flex items-center gap-1.5 capitalize"><span className="size-2 rounded-sm" style={{ background: c }} />{k}</span>) : <span>Wall-clock duration per run · red = failed run</span>}</div>
-        <span className="font-mono">PR gate · post-merge · weekly regression · manual</span>
+        
       </div>
     </section>
   );
@@ -100,8 +100,8 @@ export function Targets() {
   return (
     <section className="overflow-hidden rounded-lg border bg-card">
       <div className="flex items-start justify-between gap-3 border-b px-5 py-3.5">
-        <div><h2 className="text-sm font-semibold">Targets &amp; dependencies</h2><p className="mt-1 text-xs text-muted-foreground">Measured live by this console{data && <> · checked {data.checkedAt.slice(11, 16)} UTC</>}</p></div>
-        <ProvenanceBadge kind="live" />
+        <div><h2 className="text-sm font-semibold">Targets &amp; dependencies</h2><p className="mt-1 text-xs text-muted-foreground">{data ? <>Checked {data.checkedAt.slice(11, 16)} UTC</> : 'Checked every minute'}</p></div>
+        
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
         {isLoading && !data ? [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-40" />) : error || !data ? (
@@ -124,5 +124,5 @@ function LatestRuns() {
   const { data } = useSWR<{ runs: HistoryRun[] }>('/api/history', getJson, { revalidateOnFocus: false });
   const runs = (data?.runs ?? []).slice(0, 4);
   if (!runs.length) return null;
-  return <ul className="divide-y border-t">{runs.map((r) => <li key={r.id} className="flex items-center justify-between gap-3 px-5 py-2.5 text-xs"><Link href={`/runs/gh/${r.id}`} className="min-w-0 truncate font-mono text-[11px] hover:text-primary"><span className="mr-2 rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] text-muted-foreground">{PHASE_LABEL[r.phase]}</span>{r.ref}<span className="ml-2 text-muted-foreground">{r.startedAt.slice(5, 16).replace('T', ' ')}</span></Link><span className="flex shrink-0 items-center gap-3">{r.causes && Object.keys(r.causes).length > 0 && <span className="hidden font-mono text-[10px] text-destructive sm:inline">{Object.entries(r.causes).map(([c, n]) => `${c.toUpperCase()} ${n}`).join(' · ')}</span>}{r.stats && <span className="font-mono text-[10px] text-muted-foreground">{r.stats.passed}/{r.stats.passed + r.stats.failed + r.stats.flaky + r.stats.skipped}</span>}{r.status === 'completed' ? <ConclusionBadge conclusion={r.conclusion ?? null} /> : <span className="font-mono text-[10px] text-primary">{r.status.replace('_', ' ')}</span>}<a href={r.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${r.ref} on GitHub`} className="text-primary"><ArrowUpRightIcon className="size-3.5" /></a></span></li>)}</ul>;
+  return <ul className="divide-y border-t">{runs.map((r) => <li key={r.id} className="flex items-center justify-between gap-3 px-5 py-2.5 text-xs"><Link href={`/runs/gh/${r.id}`} className="min-w-0 truncate font-mono text-[11px] hover:text-primary"><span className="mr-2 rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] text-muted-foreground">{PHASE_LABEL[r.phase]}</span>{r.ref}<span className="ml-2 text-muted-foreground">{r.startedAt.slice(5, 16).replace('T', ' ')}</span></Link><span className="flex shrink-0 items-center gap-3">{r.causes && Object.keys(r.causes).length > 0 && <span className="hidden font-mono text-[10px] text-destructive sm:inline">{Object.entries(r.causes).map(([c, n]) => `${c.toUpperCase()} ${n}`).join(' · ')}</span>}{r.stats && <span className="font-mono text-[10px] text-muted-foreground">{r.stats.passed}/{r.stats.passed + r.stats.failed + r.stats.flaky + r.stats.skipped}</span>}{r.status === 'completed' ? <ConclusionBadge conclusion={r.conclusion ?? null} /> : <span className="font-mono text-[10px] text-primary">{r.status.replace('_', ' ')}</span>}<Link href={`/runs/gh/${r.id}`} aria-label={`Open ${r.ref} report`} className="text-primary"><ArrowUpRightIcon className="size-3.5" /></Link></span></li>)}</ul>;
 }
