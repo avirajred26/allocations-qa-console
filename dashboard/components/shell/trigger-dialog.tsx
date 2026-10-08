@@ -171,8 +171,7 @@ export function TriggerDialog({
           <DialogHeader>
             <DialogTitle>Trigger a harness run</DialogTitle>
             <DialogDescription>
-              Dispatches an allowlisted GitHub Actions workflow against the public pre-auth surface. Each attempt that
-              reaches GitHub consumes daily quota, even if confirmation is uncertain.
+              Assignment demo · runs the public pre-auth checks for dashboard.allocations.com in GitHub Actions.
             </DialogDescription>
           </DialogHeader>
 
@@ -194,7 +193,6 @@ export function TriggerDialog({
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <FieldDescription>{envInfo?.aliasOf ? `${envInfo.label} is a demo alias of production for this assignment: it runs against ${envInfo.baseUrl?.replace(/^https?:\/\//, '')} and every report says so.` : 'From qa-environments.json; nothing silently falls back to production.'}</FieldDescription>
             </FieldSet>
 
             <FieldSet>
@@ -214,7 +212,6 @@ export function TriggerDialog({
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <FieldDescription>{WORKFLOW_OPTIONS.find((o) => o.value === workflow)?.hint} PR runs (qa-pr.yml) start from pull requests, not from here.</FieldDescription>
             </FieldSet>
 
             {workflow === 'qa-run.yml' && (
@@ -235,12 +232,6 @@ export function TriggerDialog({
                     </ToggleGroupItem>
                   ))}
                 </ToggleGroup>
-                {suite === 'drill' && (
-                  <p className="text-[11px] leading-5 text-warning">
-                    Runs two deliberate, read-only failures (one UI, one API) on desktop to demonstrate the failure report:
-                    cause, screenshot, recording, trace and log. Expected result: failed.
-                  </p>
-                )}
               </FieldSet>
             )}
 
@@ -265,9 +256,7 @@ export function TriggerDialog({
               </FieldSet>
             )}
 
-            {!needsKey ? (
-              <p className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground"><KeyRoundIcon className="size-3.5" aria-hidden />Open demo trigger, no key needed · 30 s cooldown · 20 runs a day · 5 per browser</p>
-            ) : remembered ? (
+            {!needsKey ? null : remembered ? (
               <div className="flex items-center justify-between gap-3 rounded-lg border border-success/25 bg-success/5 px-3 py-2.5 text-xs">
                 <span className="flex items-center gap-2"><KeyRoundIcon className="size-3.5 text-success" aria-hidden />Demo key remembered on this browser until {new Date(session!.expiresAt!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 <button type="button" onClick={forget} className="text-primary underline-offset-2 hover:underline">Forget</button>
