@@ -18,6 +18,10 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
  *   ALLOW_TEST_NAMESPACE=1 TEST_COOLDOWN_SECONDS=1 TEST_DISPATCH_MODE=accept TEST_ACQUIRE_TIMEOUT_MS=0 npm run dev
  *   DEMO_KEY=<key> TEST_DISPATCH_MODE=accept TEST_ACQUIRE_TIMEOUT_MS=0 npm test   # delayed ACQUIRE / CANCEL
  *
+ * The cases above run against a key-mode server (TRIGGER_REQUIRE_KEY=1). Open mode:
+ *   ALLOW_TEST_NAMESPACE=1 TEST_COOLDOWN_SECONDS=1 TEST_DISPATCH_MODE=accept npm run dev
+ *   TRIGGER_OPEN=1 TEST_DISPATCH_MODE=accept npm test
+ *
  * TEST_DISPATCH_MODE in the test process selects which cases run; it must match the server.
  */
 const KEY = process.env.DEMO_KEY ?? '';
@@ -36,8 +40,46 @@ async function used(request: APIRequestContext, namespace: string) {
   return (await r.json()).used as number;
 }
 
+/** Server started without TRIGGER_REQUIRE_KEY: no key, same-origin only, per-visitor cap. */
+const OPEN = process.env.TRIGGER_OPEN === '1';
+
+test.describe('POST /api/trigger — open mode (no key)', () => {
+  test.skip(!OPEN || MODE !== 'accept', 'requires an open-mode server (no TRIGGER_REQUIRE_KEY) with TEST_DISPATCH_MODE=accept, and TRIGGER_OPEN=1 here');
+  const post = (request: APIRequestContext, namespace: string, visitor: string, origin?: string) =>
+    request.post('/api/trigger', { data: { suite: 'desktop' }, headers: { 'x-trigger-namespace': namespace, 'x-test-visitor': visitor, ...(origin ? { origin } : {}) } });
+
+  test('no key from the console origin is admitted; the session API reports no key required', async ({ request, baseURL }) => {
+    const n = ns();
+    const r = await post(request, n, `v-${n}`, baseURL);
+    expect(r.status()).toBe(202);
+    expect(await r.json()).toMatchObject({ dispatch: 'accepted', visitorUsed: 1, visitorLimit: 5 });
+    expect((await (await request.get('/api/session')).json()).keyRequired).toBe(false);
+  });
+
+  test('a foreign or missing origin is refused before any quota is spent', async ({ request }) => {
+    const n = ns();
+    expect((await post(request, n, `v-${n}`, 'https://evil.example')).status()).toBe(403);
+    expect((await post(request, n, `v-${n}`)).status()).toBe(403);
+    expect(await used(request, n)).toBe(0);
+  });
+
+  test('one visitor is capped at 5 runs a day; another visitor is still admitted', async ({ request, baseURL }) => {
+    test.setTimeout(60_000);
+    const n = ns();
+    for (let i = 1; i <= 5; i++) {
+      expect((await post(request, n, 'same-visitor', baseURL)).status(), `run ${i}`).toBe(202);
+      await sleep(1200); // TEST_COOLDOWN_SECONDS=1
+    }
+    const sixth = await post(request, n, 'same-visitor', baseURL);
+    expect(sixth.status()).toBe(429);
+    expect((await sixth.json()).error).toBe('visitor-limit');
+    expect(await used(request, n)).toBe(5);
+    expect((await post(request, n, 'other-visitor', baseURL)).status()).toBe(202);
+  });
+});
+
 test.describe('POST /api/trigger', () => {
-  test.skip(!KEY, 'DEMO_KEY not set');
+  test.skip(!KEY || OPEN, 'DEMO_KEY not set, or running the open-mode suite');
 
   test('bad key → 401; cooldown and quota untouched', async ({ request }) => {
     const n = ns();

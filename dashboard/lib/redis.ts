@@ -146,3 +146,26 @@ export async function quota(keys: Keys): Promise<{ used: number; limit: number; 
   const [used, ttl] = await withTimeout(Promise.all([redis.get<number>(keys.daily), redis.ttl(keys.cooldown)]), 2000);
   return { used: Number(used ?? 0), limit: DAILY_LIMIT, cooldownRemaining: Math.max(0, ttl) };
 }
+
+/**
+ * Per-visitor daily cap for the open (no-key) trigger, so one browser or script cannot spend
+ * the whole day's quota. Keyed by a hash of the client IP; the IP itself is never stored.
+ * Checked before admission and charged after dispatch; a race can overshoot by one, which the
+ * global atomic cap above still bounds.
+ */
+export const VISITOR_DAILY_LIMIT = 5;
+
+export function visitorKey(visitor: string, namespace = 'prod', at = new Date()): string {
+  const ns = namespace.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) || 'prod';
+  return `trigger:${ns}:visitor:${visitor}:${at.toISOString().slice(0, 10)}`;
+}
+
+export async function visitorUsed(key: string): Promise<number> {
+  return Number((await withTimeout(redis.get<number>(key), 2000)) ?? 0);
+}
+
+export async function chargeVisitor(key: string): Promise<number> {
+  const n = await withTimeout(redis.incr(key), 2000);
+  if (n === 1) await withTimeout(redis.expire(key, DAILY_TTL_SECONDS), 2000).catch(() => undefined);
+  return n;
+}

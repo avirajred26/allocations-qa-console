@@ -2,7 +2,7 @@
 
 Independent Lead QA assignment for dashboard.allocations.com. Not an official Allocations product. This package combines the original Playwright harness and GitHub workflow with the completed v0-derived dashboard, including the latest local redesign (7 October 2026).
 
-**Live console: https://aviraj-allocations-qa.vercel.app** — Live trigger configured; demo key issued to reviewers out-of-band. No credentials are included in this repo.
+**Live console: https://aviraj-allocations-qa.vercel.app** — Live trigger configured and open for the demo (no key): same-origin only, 30 s cooldown, 20 runs a day overall and 5 per browser. Set `TRIGGER_REQUIRE_KEY=1` in Vercel to require the demo key again. No credentials are included in this repo.
 
 **Built with v0.dev:** the console's first version was generated in v0 from `dashboard/V0_PROMPT.md` — [v0 chat “Build Lead QA tool”](https://v0.app/avirajlall26-2389/chat/build-lead-qa-tool-qVMTjJgaNwZ). It was then deployed on Vercel and extended in code: the Playwright harness, GitHub Actions gates (pre-merge, post-merge, weekly regression), the trigger backend (Redis quota, demo-key session), live run history and run reports, and the QA/QC process page.
 

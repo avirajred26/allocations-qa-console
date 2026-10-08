@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server';
-import { verifyDemoKey, requestId, issueSession, verifySession, readCookie, sessionCookieHeader, SESSION_COOKIE, SESSION_TTL_SECONDS } from '@/lib/auth';
-import { acquireTriggerSlot, releaseTriggerSlot, cancelAdmission, keysFor, cooldownSeconds, DAILY_LIMIT } from '@/lib/redis';
+import { verifyDemoKey, requestId, issueSession, verifySession, readCookie, sessionCookieHeader, SESSION_COOKIE, SESSION_TTL_SECONDS, keyRequired, visitorId, sameOrigin } from '@/lib/auth';
+import { acquireTriggerSlot, releaseTriggerSlot, cancelAdmission, keysFor, cooldownSeconds, DAILY_LIMIT, VISITOR_DAILY_LIMIT, visitorKey, visitorUsed, chargeVisitor } from '@/lib/redis';
 import { isTargetable } from '@/lib/environments';
 import { dispatchRun, newRunRef, DISPATCHABLE, type DispatchWorkflow, type Scope, type Suite } from '@/lib/github';
 
@@ -17,6 +17,8 @@ const E = {
   daily: { error: 'daily-limit', message: `Daily trigger limit (${DAILY_LIMIT}) reached. Resets at 00:00 UTC.` },
   failed: { error: 'trigger-failed', message: 'Could not start the run. Please try again shortly.' },
   badRequest: { error: 'bad-request', message: 'Invalid request.' },
+  forbidden: { error: 'forbidden', message: 'Runs can only be started from the QA console.' },
+  visitor: { error: 'visitor-limit', message: `This browser has started ${VISITOR_DAILY_LIMIT} runs today. Resets at 00:00 UTC.` },
 } as const;
 
 /** Test seam: a per-test key namespace, honoured only outside production. */
@@ -29,8 +31,10 @@ function namespaceFrom(req: Request): string | undefined {
  * POST /api/trigger
  * body: { demoKey?: string, remember?: boolean, workflow?: 'qa-run.yml'|'qa-regression.yml',
  *         suite?: 'all'|'desktop'|'mobile'|'drill', scope?: 'full'|'api'|'ui', environment?: string }
- * Auth: a submitted demoKey is always checked (a wrong key is 401 even with a remembered
- * session); with no key, a valid qa_demo_session cookie is accepted.
+ * Open mode (default): no key; same-origin only, per-visitor cap (5/day) on top of the global
+ * cooldown and daily cap. Key mode (TRIGGER_REQUIRE_KEY=1): a submitted demoKey is always
+ * checked (a wrong key is 401 even with a remembered session); with no key, a valid
+ * qa_demo_session cookie is accepted.
  *
  * Order: validate key → atomic cooldown+daily cap → dispatch →
  *   rejected  → owner-checked rollback on the original keys
@@ -52,13 +56,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'bad-request', message: `Environment "${String(environment).slice(0, 20)}" is not configured.` }, { status: 400 });
   }
 
-  // 1. Auth first so a bad key cannot consume a cooldown slot.
+  // 1. Auth / origin first so a refused request cannot consume a cooldown slot.
+  const requireKey = keyRequired();
   const keyGiven = body?.demoKey !== undefined && body?.demoKey !== '';
-  const viaKey = keyGiven && verifyDemoKey(body.demoKey);
-  const viaSession = !keyGiven && verifySession(readCookie(req, SESSION_COOKIE)) !== null;
-  if (!viaKey && !viaSession) {
+  const viaKey = requireKey && keyGiven && verifyDemoKey(body.demoKey);
+  const viaSession = requireKey && !keyGiven && verifySession(readCookie(req, SESSION_COOKIE)) !== null;
+  if (requireKey && !viaKey && !viaSession) {
     console.info(`[trigger ${rid}] auth=failed`);
     return NextResponse.json(E.unauthorized, { status: 401 });
+  }
+  if (!requireKey && !sameOrigin(req)) {
+    console.info(`[trigger ${rid}] origin=refused`);
+    return NextResponse.json(E.forbidden, { status: 403 });
+  }
+
+  // 1b. Open mode: per-visitor daily cap, so one browser cannot spend the whole day's quota.
+  const vKey = requireKey ? null : visitorKey(visitorId(req), namespaceFrom(req));
+  if (vKey) {
+    try {
+      if ((await visitorUsed(vKey)) >= VISITOR_DAILY_LIMIT) return NextResponse.json(E.visitor, { status: 429 });
+    } catch {
+      return NextResponse.json(E.failed, { status: 503 });
+    }
   }
 
   // 2 + 3. Atomic admission control in Redis.
@@ -97,7 +116,8 @@ export async function POST(req: Request) {
     return NextResponse.json(E.failed, { status: 502 });
   }
 
-  console.info(`[trigger ${rid}] auth=${viaKey ? 'key' : 'session'} dispatch=${outcome} ref=${runRef} workflow=${workflow} env=${environment} suite=${suite} scope=${scope} used=${slot.admission.count}`);
+  const visitorCount = vKey ? await chargeVisitor(vKey).catch(() => null) : null;
+  console.info(`[trigger ${rid}] auth=${!requireKey ? 'open' : viaKey ? 'key' : 'session'} dispatch=${outcome} ref=${runRef} workflow=${workflow} env=${environment} suite=${suite} scope=${scope} used=${slot.admission.count}`);
   const session = viaKey && body?.remember !== false ? issueSession() : null;
   const res = NextResponse.json(
     {
@@ -107,6 +127,8 @@ export async function POST(req: Request) {
       suite,
       scope,
       remembered: session ? session.expiresAt : null,
+      visitorUsed: visitorCount,
+      visitorLimit: vKey ? VISITOR_DAILY_LIMIT : null,
       dispatch: outcome, // 'accepted' | 'uncertain' — UI shows "confirming…" for uncertain until the poller finds it
       cooldownSeconds: cooldownSeconds(),
       quotaUsed: slot.admission.count,

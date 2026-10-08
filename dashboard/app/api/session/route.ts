@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { SESSION_COOKIE, readCookie, sessionCookieHeader, verifySession } from '@/lib/auth';
+import { SESSION_COOKIE, keyRequired, readCookie, sessionCookieHeader, verifySession } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 /** GET /api/session — is this browser remembered? Never reveals the key or the cookie value. */
 export async function GET(req: Request) {
   const exp = verifySession(readCookie(req, SESSION_COOKIE));
-  return NextResponse.json({ active: exp !== null, expiresAt: exp }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ keyRequired: keyRequired(), active: exp !== null, expiresAt: exp }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 /** DELETE /api/session — forget this browser. */
