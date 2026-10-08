@@ -7,7 +7,7 @@ ABS="$PWD/$OUT"   # Maestro writes screenshots/recordings relative to the flow o
 # Skip Chrome's first-run screens (emulator images are debuggable, so Chrome reads this file).
 adb shell 'echo "_ --disable-fre --no-default-browser-check --no-first-run" > /data/local/tmp/chrome-command-line'
 adb shell am force-stop com.android.chrome || true
-adb shell getprop ro.build.version.release > "$OUT/os-version.txt"
+{ echo "Android $(adb shell getprop ro.build.version.release | tr -d '\r')"; echo "Chrome $(adb shell dumpsys package com.android.chrome | grep -m1 versionName | sed 's/.*versionName=//' | tr -d '\r')"; } > "$OUT/os-version.txt"
 maestro test mobile/flows/android \
   -e BASE_URL="$BASE_URL" -e OUT="$ABS" \
   --format junit --output "$OUT/junit.xml" \

@@ -165,7 +165,10 @@ export function junitReport(spec, suite = 'both') {
   // Evidence the flow saved when the app showed its session error before the retry.
   for (const p of platforms) {
     const dir = spec.split(',').find((x) => x.startsWith(`${p.project}=`))?.split('=')[1]?.replace(/\/[^/]*$/, '');
-    if (dir && existsSync(`${dir}/00-session-error.png`)) report.findings.push(`MOB-001 (${p.project}): "Unable to load your session" on first load in the mobile browser; recovered after Retry.`);
+    if (!dir || !existsSync(`${dir}/00-session-error.png`)) continue;
+    const failed = report.failures.some((f) => f.project === p.project);
+    const env = existsSync(`${dir}/os-version.txt`) ? readFileSync(`${dir}/os-version.txt`, 'utf8').trim().replace(/\s*\n\s*/g, ', ') : '';
+    report.findings.push(`MOB-001 (${p.project}${env ? `, ${env}` : ''}): sign-in page shows "Unable to load your session"; ${failed ? 'Retry does not recover' : 'recovered after Retry'}.`);
   }
   return report;
 }

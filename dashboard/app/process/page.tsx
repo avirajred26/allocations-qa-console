@@ -101,6 +101,48 @@ function PipelineDiagram() {
   );
 }
 
+/** Mobile pipeline: the app lifecycle, plus what this assignment runs today. */
+function MobilePipelineDiagram() {
+  const box = 'fill-[var(--card)] stroke-[var(--border)]';
+  const node = (x: number, y: number, w: number, title: string, sub: string, tone = 'var(--primary)') => (
+    <g transform={`translate(${x},${y})`}>
+      <rect width={w} height="58" rx="8" className={box} strokeWidth="1" />
+      <rect width="3" height="58" rx="1.5" fill={tone} />
+      <text x="14" y="24" className="fill-[var(--foreground)]" fontSize="12" fontWeight="600">{title}</text>
+      <text x="14" y="42" className="fill-[var(--muted-foreground)]" fontSize="10.5" fontFamily="var(--font-mono)">{sub}</text>
+    </g>
+  );
+  const arrow = (x1: number, y: number, x2: number) => <line x1={x1} y1={y} x2={x2} y2={y} stroke="var(--muted-foreground)" strokeWidth="1.2" markerEnd="url(#m-arrow)" />;
+  return (
+    <div className="overflow-x-auto">
+      <svg viewBox="0 0 960 300" className="min-w-[760px]" role="img" aria-label="Mobile pipeline: PR builds the apps and runs unit tests and key flows on a simulator and emulator; merge makes a signed staging build, runs the full suite and uploads to TestFlight and Play internal; weekly regression runs on real devices; release needs green regression and crash-free beta, then a staged rollout watched in Crashlytics. Today the assignment runs the sign-in checks in Chrome on an Android emulator and Safari on an iPhone simulator.">
+        <defs><marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" /></marker></defs>
+        <text x="0" y="14" className="fill-[var(--muted-foreground)]" fontSize="10" letterSpacing="1.5">APP LIFECYCLE (WITH A REAL APP BUILD)</text>
+        {node(0, 28, 170, 'PR', 'build · unit · key flows', 'var(--chart-1)')}
+        {arrow(170, 57, 200)}
+        {node(200, 28, 180, 'Merge to main', 'staging build · full suite', 'var(--chart-2)')}
+        {arrow(380, 57, 410)}
+        {node(410, 28, 170, 'Beta', 'TestFlight · Play internal')}
+        {arrow(580, 57, 610)}
+        {node(610, 28, 160, 'Release gate', 'devices green · ≥99.5%', 'var(--warning)')}
+        {arrow(770, 57, 800)}
+        {node(800, 28, 160, 'Staged rollout', '10% → 100%', 'var(--success)')}
+        {node(200, 108, 380, 'Weekly regression on real devices', 'BrowserStack / Firebase · iOS 17–18 · Android 12–15', 'var(--warning)')}
+        <path d="M290 86 V108" stroke="var(--border)" strokeWidth="1.2" />
+        <path d="M580 137 H690 V86" fill="none" stroke="var(--border)" strokeWidth="1.2" markerEnd="url(#m-arrow)" />
+        <text x="0" y="200" className="fill-[var(--muted-foreground)]" fontSize="10" letterSpacing="1.5">RUNNING NOW IN THIS ASSIGNMENT</text>
+        {node(0, 212, 200, 'Trigger', 'PR · weekly · manual', 'var(--chart-5)')}
+        {arrow(200, 241, 230)}
+        {node(230, 212, 220, 'Android emulator', 'Chrome · Pixel 6 · API 34', 'var(--chart-1)')}
+        {node(470, 212, 220, 'iPhone simulator', 'Safari · macOS runner', 'var(--chart-1)')}
+        <text x="460" y="206" textAnchor="middle" className="fill-[var(--muted-foreground)]" fontSize="10">in parallel</text>
+        {arrow(690, 241, 720)}
+        {node(720, 212, 240, 'One report', 'screenshots · recording · log', 'var(--success)')}
+      </svg>
+    </div>
+  );
+}
+
 export default function ProcessPage() {
   return (
     <>
@@ -151,11 +193,13 @@ export default function ProcessPage() {
 
       <Section id="mobile" icon={SmartphoneIcon} title="Mobile (Android + iOS)" intro="Assignment demo: there is no Allocations app build, so the mobile checks open the public sign-in page in the phone's own browser.">
         <div className="space-y-6">
+          <MobilePipelineDiagram />
           <div>
             <h3 className="mb-2 text-sm font-medium">Running now</h3>
             <div className="-mx-5 overflow-x-auto"><table className="qa-table min-w-[640px]"><thead><tr><th>Check</th><th>Device</th><th>When</th><th>Evidence</th></tr></thead><tbody>
               {[['MOB-A01', 'Chrome on an Android emulator (Pixel 6, API 34)'], ['MOB-I01', 'Safari on an iPhone simulator (macOS runner)']].map(([id, d]) => <tr key={id}><td className="whitespace-nowrap font-mono text-xs text-primary">{id}</td><td className="text-xs">{d}</td><td className="text-xs text-muted-foreground">PRs that change mobile/, Mondays 04:00 UTC, Trigger run → qa-mobile.yml</td><td className="text-xs text-muted-foreground">Screenshots, screen recording, Maestro log</td></tr>)}
             </tbody></table></div>
+            <p className="mt-3 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-[11px] leading-5 text-warning">Finding MOB-001: in Chrome on the Android emulator the sign-in page shows &quot;Unable to load your session&quot; and Retry does not recover it (reproduced in two runs). Safari on the iPhone simulator and Android Chrome emulation in Playwright both load fine, so the likely cause is the emulator&apos;s older built-in Chrome. Next: confirm on a real Android phone. MOB-A01 stays red until then.</p>
             <p className="mt-3 text-[11px] leading-5 text-muted-foreground">Each flow loads the sign-in page, then tries an empty and a malformed email, the same inputs SM-002 shows are rejected in the browser, so nothing is sent to Allocations. Tool: Maestro.</p>
           </div>
           <div>
