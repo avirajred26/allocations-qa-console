@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { BellIcon, BoxesIcon, ServerIcon, CalendarClockIcon, ClipboardCheckIcon, GaugeIcon, GitMergeIcon, GitPullRequestIcon, HandIcon, RouteIcon, ShieldCheckIcon, SirenIcon, UsersIcon } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
-import { REPO_URL } from '@/lib/fixture';
+import { REPO_URL, V0_URL } from '@/lib/fixture';
 import { ENVIRONMENTS, GATES } from '@/lib/environments';
 
 export const metadata = { title: 'QA/QC process · Allocations QA Console' };
@@ -123,6 +123,14 @@ export default function ProcessPage() {
           ['Quality control', 'Every run is measured: totals, durations, failure causes and evidence, reported where the team already works.'],
           ['Honest scope', 'Automated checks cover the public, pre-auth surface. Authenticated flows (SPV formation, KYC, capital calls, distributions) are mocked and labelled until credentials exist.'],
         ].map(([t, b]) => <div key={t} className="qa-panel"><h2 className="text-sm font-semibold">{t}</h2><p className="mt-2 text-xs leading-6 text-muted-foreground">{b}</p></div>)}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-card px-5 py-3 text-xs">
+        <span className="font-medium">How this console was built</span>
+        <span className="text-muted-foreground">1 · UI generated in <a href={V0_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">v0.dev ↗</a> from dashboard/V0_PROMPT.md</span>
+        <span className="text-muted-foreground">2 · Published on Vercel</span>
+        <span className="text-muted-foreground">3 · Extended in code: harness, CI gates, trigger backend, run reports</span>
+        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="ml-auto text-primary hover:underline">Repository ↗</a>
       </div>
 
       <Section id="pipeline" icon={RouteIcon} title="Pipeline" intro="A change moves left to right; a red gate sends it back. Scheduled and manual runs produce the same report.">

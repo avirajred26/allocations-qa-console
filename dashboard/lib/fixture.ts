@@ -50,6 +50,8 @@ export const scenarios: readonly Scenario[] = fixture.scenarios;
 
 export const RELEASE_TRAIN = '2026.10';
 export const REPO_URL = 'https://github.com/avirajred26/allocations-qa-console';
+/** The v0.dev chat that generated the console's first version (UI scaffold from dashboard/V0_PROMPT.md). */
+export const V0_URL = 'https://v0.app/avirajlall26-2389/chat/build-lead-qa-tool-qVMTjJgaNwZ';
 
 export const FLOW_ORDER: Flow[] = ['pre-auth', 'spv-formation', 'investor-onboarding', 'capital-calls', 'distributions'];
 
